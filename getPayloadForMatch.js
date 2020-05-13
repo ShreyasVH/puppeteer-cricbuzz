@@ -9,6 +9,7 @@ function getDetails() {
     try {
         let team1;
         let team2;
+        let players = [];
         let teamsElements = document.querySelectorAll('.cb-minfo-tm-nm');
         if (teamsElements.length === 6) {
             for (let index in teamsElements) {
@@ -26,6 +27,43 @@ function getDetails() {
                     team2 = text.replace('Squad', '').trim();
                     details.team2 = team2;
                 }
+
+                if (index === 1) {
+                    const divs = teamElement.querySelectorAll('div');
+                    const playerDiv = divs[1];
+                    const playerElements = playerDiv.querySelectorAll('a');
+
+                    for (const playerElement of playerElements) {
+                        const title = playerElement.title;
+                        const matches = title.match(/View profile of (.*)/);
+                        const name = matches[1];
+
+                        let player = {
+                            player: name,
+                            team: team1
+                        }
+                        players.push(player);
+                    }
+                }
+
+                if (index === 4) {
+                    const divs = teamElement.querySelectorAll('div');
+                    const playerDiv = divs[1];
+                    const playerElements = playerDiv.querySelectorAll('a');
+
+                    for (const playerElement of playerElements) {
+                        const title = playerElement.title;
+                        const matches = title.match(/View profile of (.*)/);
+                        const name = matches[1];
+
+                        let player = {
+                            player: name,
+                            team: team2
+                        }
+                        players.push(player);
+                    }
+                }
+                details.players = players;
             }
         }
 
