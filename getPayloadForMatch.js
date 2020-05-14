@@ -3,7 +3,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-function getDetails() {
+exports.getDetails = () => {
     let details = {};
 
     try {
@@ -142,7 +142,7 @@ function getDetails() {
         timeout: 0
     });
 
-    let details = await page.evaluate(getDetails);
+    let details = await page.evaluate(exports.getDetails);
     console.log(details);
 
     // const scores = await page.evaluate(getScores);
