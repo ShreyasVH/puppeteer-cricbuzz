@@ -93,6 +93,33 @@ function getDetails() {
             }
         }
 
+        const resultElement = document.querySelector('.cb-scrcrd-status');
+        const resultText = resultElement.innerText;
+        if (resultText.indexOf(' won ') !== -1) {
+            if (resultText.indexOf('(') === -1) {
+                let matches = resultText.match(/(.*) won (.*)/);
+                let winner = matches[1];
+                details.winner = winner;
+                details.result = 'NORMAL';
+            } else if (resultText.match(/super|Super/)) {
+                let matches = resultText.match(/\((.*) won (.*)/);
+                let winner = matches[1];
+                details.winner = winner;
+                details.result = 'SUPER_OVER';
+            } else if (resultText.match(/bowl|Bowl/)) {
+                let matches = resultText.match(/\((.*) won (.*)/);
+                let winner = matches[1];
+                details.winner = winner;
+                details.result = 'BOWL_OUT';
+            }
+        } else if (resultText.match('tie')) {
+            details.result = 'TIE';
+        } else if (resultText.indexOf(' drawn') !== -1) {
+            details.result = 'DRAW';
+        } else {
+            details.result = 'WASHED_OUT';
+        }
+
     } catch(e) {
         console.log(e);
     }
@@ -108,7 +135,6 @@ function getDetails() {
     });
 
     const matchUrl = process.argv[2];
-    console.log(matchUrl);
 
     const page = await browser.newPage();
     await page.goto(matchUrl, {
