@@ -97,10 +97,21 @@ exports.getDetails = () => {
         const resultText = resultElement.innerText;
         if (resultText.indexOf(' won ') !== -1) {
             if (resultText.indexOf('(') === -1) {
-                let matches = resultText.match(/(.*) won (.*)/);
+                let matches = resultText.match(/(.*) won by ([0-9]+) ([a-zA-Z]+)/);
                 let winner = matches[1];
+                const winMargin = matches[2];
                 details.winner = winner;
                 details.result = 'NORMAL';
+                details.winMargin = winMargin;
+
+                const winMarginTypeText = matches[3];
+                let winMarginType;
+                if (winMarginTypeText.match(/wkt/)) {
+                    winMarginType = 'WICKET';
+                } else if (winMarginTypeText.match(/run/)) {
+                    winMarginType = 'RUN';
+                }
+                details.winMarginType = winMarginType;
             } else if (resultText.match(/super|Super/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
                 let winner = matches[1];
