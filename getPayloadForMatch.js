@@ -218,23 +218,7 @@ exports.getDetails = () => {
         const resultElement = document.querySelector('.cb-scrcrd-status');
         const resultText = resultElement.innerText;
         if (resultText.indexOf(' won ') !== -1) {
-            if (resultText.indexOf('(') === -1) {
-                let matches = resultText.match(/(.*) won by ([0-9]+) ([a-zA-Z]+)/);
-                let winner = matches[1];
-                const winMargin = matches[2];
-                details.winner = winner;
-                details.result = 'NORMAL';
-                details.winMargin = winMargin;
-
-                const winMarginTypeText = matches[3];
-                let winMarginType;
-                if (winMarginTypeText.match(/wkt/)) {
-                    winMarginType = 'WICKET';
-                } else if (winMarginTypeText.match(/run/)) {
-                    winMarginType = 'RUN';
-                }
-                details.winMarginType = winMarginType;
-            } else if (resultText.match(/super|Super/)) {
+            if (resultText.match(/super|Super/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
                 let winner = matches[1];
                 details.winner = winner;
@@ -244,6 +228,22 @@ exports.getDetails = () => {
                 let winner = matches[1];
                 details.winner = winner;
                 details.result = 'BOWL_OUT';
+            } else {
+                let matches = resultText.match(/(.*) won by ([0-9]+) ([a-zA-Z]+)/);
+                let winner = matches[1];
+                const winMargin = matches[2];
+                details.winner = winner;
+                details.result = 'NORMAL';
+                details.winMargin = winMargin;
+
+                const winMarginTypeText = matches[3];
+                let winMarginType;
+                if (winMarginTypeText.match(/wkt|wicket/)) {
+                    winMarginType = 'WICKET';
+                } else if (winMarginTypeText.match(/run/)) {
+                    winMarginType = 'RUN';
+                }
+                details.winMarginType = winMarginType;
             }
         } else if (resultText.match('tie')) {
             details.result = 'TIE';
@@ -276,6 +276,7 @@ exports.getDetails = () => {
     });
 
     let details = await page.evaluate(exports.getDetails);
+    details.url = matchUrl;
     console.log(JSON.stringify(details, null, ' '));
 
     // const scores = await page.evaluate(getScores);
