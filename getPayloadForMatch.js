@@ -4,6 +4,90 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 
 exports.getDetails = () => {
+    const getInningsDetails = inning => {
+        let details = {};
+
+        let inningsDiv = document.querySelector('#innings_' + inning);
+        if (inningsDiv) {
+            let divs = inningsDiv.children;
+            if (divs.length > 0) {
+                let batsmanDiv = divs[0];
+                let battingScores = [];
+                let battingScoreDivs = batsmanDiv.children;
+
+                if (battingScoreDivs.length > 0) {
+                    const inningsHeader = battingScoreDivs[0];
+                    const inningsHeaderChildren = inningsHeader.children;
+                    if (inningsHeaderChildren.length > 0) {
+                        let inningsTextSpan = inningsHeaderChildren[0];
+                        let inningsText = inningsTextSpan.innerText;
+                        let matches = inningsText.match(/(.*) Innings/);
+                        let team = matches[1];
+                        if (team.match(/1st/)) {
+                            team = team.replace(' 1st', '');
+                        } else if (team.match(/2nd/)) {
+                            team = team.replace(' 2nd', '');
+                        }
+
+                        for (let index in battingScoreDivs) {
+                            let battingScoreObject = {};
+                            if (battingScoreDivs.hasOwnProperty(index)) {
+                                index = parseInt(index, 10);
+
+                                if (index > 1) {
+                                    let scoreDiv = battingScoreDivs[index];
+                                    let innerDivs = scoreDiv.children;
+                                    if (innerDivs.length > 0) {
+                                        let batsmanDiv = innerDivs[0];
+
+                                        let batsmanLink = batsmanDiv.querySelector('a');
+                                        let isBattingScoreDiv = false;
+                                        if (null != batsmanLink) {
+                                            isBattingScoreDiv = true;
+                                            let batsman = batsmanLink.innerText.trim();
+                                            battingScoreObject.player = batsman;
+                                        }
+
+                                        let dismissalDiv = innerDivs[1];
+
+                                        if (isBattingScoreDiv) {
+                                            let runsDiv = innerDivs[2];
+                                            battingScoreObject.runs = parseInt(runsDiv.innerText, 10);
+
+                                            let ballsDiv = innerDivs[3];
+                                            battingScoreObject.balls = parseInt(ballsDiv.innerText, 10);
+
+                                            let foursDiv = innerDivs[4];
+                                            battingScoreObject.fours = parseInt(foursDiv.innerText, 10);
+
+                                            let sixesDiv = innerDivs[5];
+                                            battingScoreObject.sixes = parseInt(sixesDiv.innerText, 10);
+
+                                            battingScoreObject.innings = inning;
+                                            battingScoreObject.team = team;
+                                        }
+
+                                    }
+
+                                    if (Object.keys(battingScoreObject).length > 0) {
+                                        battingScores.push(battingScoreObject);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                details.battingScores = battingScores;
+            }
+
+        }
+
+        return details;
+    };
+
+
+
     let details = {};
 
     try {
@@ -41,7 +125,7 @@ exports.getDetails = () => {
                         let player = {
                             player: name,
                             team: team1
-                        }
+                        };
                         players.push(player);
                     }
                 }
@@ -59,7 +143,7 @@ exports.getDetails = () => {
                         let player = {
                             player: name,
                             team: team2
-                        }
+                        };
                         players.push(player);
                     }
                 }
@@ -88,6 +172,44 @@ exports.getDetails = () => {
                         }
                     }
                     details.batFirst = batFirst;
+
+                    let scorecards = {};
+
+                    for(let i = 1; i <= 4; i++) {
+                        let inningsDetails = getInningsDetails(i);
+                        if (Object.keys(inningsDetails).length > 0) {
+                            scorecards[i] = inningsDetails;
+                        }
+                    }
+                    // details.scorecards = scorecards;
+                    let team1Innings = 1;
+                    let team2Innings = 1;
+                    let battingScores = [];
+                    for (let innings in scorecards) {
+                        if (scorecards.hasOwnProperty(innings)) {
+                            innings = parseInt(innings, 10);
+
+                            const inningsObject = scorecards[innings];
+
+                            let team = '';
+
+                            let inningsBattingScores = inningsObject.battingScores;
+                            for (const battingScore of inningsBattingScores) {
+                                battingScore.teamInnings = ((team1 === battingScore.team) ? team1Innings : team2Innings);
+                                battingScores.push(battingScore);
+                                team = battingScore.team;
+                            }
+
+                            // debugger;
+                            if (team1 === team) {
+                                team1Innings++;
+                            } else if (team2 === team) {
+                                team2Innings++;
+                            }
+                            team = '';
+                        }
+                    }
+                    details.battingScores = battingScores;
 
                 }
             }
@@ -136,7 +258,7 @@ exports.getDetails = () => {
     }
 
     return details;
-}
+};
 
 
 (async() => {
@@ -154,11 +276,15 @@ exports.getDetails = () => {
     });
 
     let details = await page.evaluate(exports.getDetails);
-    console.log(details);
+    console.log(JSON.stringify(details, null, ' '));
 
     // const scores = await page.evaluate(getScores);
 
-    // fs.writeFile('scores.json', JSON.stringify(scores, null, ' '));
+    fs.writeFile('data/scores.json', JSON.stringify(details, null, ' '), error => {
+        if (error) {
+            console.log("\n\t\tError while writing card data status. Error: " + error + "\n");
+        }
+    });
     await page.close();
 
     await browser.close();
