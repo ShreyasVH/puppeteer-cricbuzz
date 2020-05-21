@@ -3,7 +3,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-exports.getDetails = () => {
+const getMatchDetailsFromHTML = () => {
     const getInningsDetails = inning => {
         let details = {};
 
@@ -260,14 +260,11 @@ exports.getDetails = () => {
     return details;
 };
 
-
-(async() => {
+const getMatchDetails = async (matchUrl) => {
     const browser  = await puppeteer.launch({
         headless: true,
         devtools: true
     });
-
-    const matchUrl = process.argv[2];
 
     const page = await browser.newPage();
     await page.goto(matchUrl, {
@@ -275,20 +272,19 @@ exports.getDetails = () => {
         timeout: 0
     });
 
-    let details = await page.evaluate(exports.getDetails);
-    details.url = matchUrl;
-    console.log(JSON.stringify(details, null, ' '));
-
-    // const scores = await page.evaluate(getScores);
-
-    fs.writeFile('data/scores.json', JSON.stringify(details, null, ' '), error => {
-        if (error) {
-            console.log("\n\t\tError while writing card data status. Error: " + error + "\n");
-        }
-    });
+    let details = await page.evaluate(getMatchDetailsFromHTML);
     await page.close();
 
     await browser.close();
-})();
+    return details;
+};
+
+exports.getMatchDetails = getMatchDetails;
+
+// (async() => {
+//     const matchUrl = process.argv[2];
+//     const matchDetails = await getMatchDetails(matchUrl);
+//     console.log(JSON.stringify(matchDetails, null, ' '));
+// })();
 
 

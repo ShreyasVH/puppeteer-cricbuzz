@@ -3,7 +3,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-function getSeriesList() {
+function getSeriesListFromHTML() {
     let seriesList = [];
 
     try {
@@ -26,16 +26,12 @@ function getSeriesList() {
     return seriesList;
 }
 
-
-let series = JSON.parse(fs.readFileSync('data/seriesList.json'));
-
-(async() => {
+const getSeriesList = async year => {
     const browser  = await puppeteer.launch({
         headless: true,
         devtools: true
     });
 
-    const year = process.argv[2];
     const url = 'https://www.cricbuzz.com/cricket-scorecard-archives/' + year;
 
     try {
@@ -45,24 +41,29 @@ let series = JSON.parse(fs.readFileSync('data/seriesList.json'));
             timeout: 0
         });
 
-        let seriesList = await page.evaluate(getSeriesList);
-        console.log(seriesList);
-        series[year] = seriesList;
+        let seriesList = await page.evaluate(getSeriesListFromHTML);
 
         await page.close();
 
-        
+        await browser.close();
+        return seriesList;
     } catch (e) {
         console.log(e);
     }
+};
+exports.getSeriesList = getSeriesList;
 
-    await browser.close();
-
-    fs.writeFile('data/seriesList.json', JSON.stringify(series, null, ' '), error => {
-        if (error) {
-            console.log("\n\t\tError while writing card data. Error: " + error + "\n");
-        }
-    });
-})();
+// (async() => {
+//     const year = process.argv[2];
+//
+//     const seriesList = await getSeriesList(year);
+//     console.log(JSON.stringify(seriesList, null, ' '));
+//
+//     // fs.writeFile('data/seriesList.json', JSON.stringify(series, null, ' '), error => {
+//     //     if (error) {
+//     //         console.log("\n\t\tError while writing card data. Error: " + error + "\n");
+//     //     }
+//     // });
+// })();
 
 
