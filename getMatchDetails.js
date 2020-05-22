@@ -20,7 +20,6 @@ const getMatchDetailsFromHTML = () => {
                 let batsmanDiv = divs[0];
                 let battingScores = [];
                 let battingScoreDivs = batsmanDiv.children;
-
                 if (battingScoreDivs.length > 0) {
                     const inningsHeader = battingScoreDivs[0];
                     const inningsHeaderChildren = inningsHeader.children;
@@ -40,6 +39,7 @@ const getMatchDetailsFromHTML = () => {
                             if (battingScoreDivs.hasOwnProperty(index)) {
                                 index = parseInt(index, 10);
 
+                                //ignoring header and innings title
                                 if (index > 1) {
                                     let scoreDiv = battingScoreDivs[index];
                                     let innerDivs = scoreDiv.children;
@@ -69,7 +69,6 @@ const getMatchDetailsFromHTML = () => {
                                             let sixesDiv = innerDivs[5];
                                             battingScoreObject.sixes = parseInt(sixesDiv.innerText, 10);
 
-                                            battingScoreObject.innings = inning;
                                             battingScoreObject.team = team;
                                         }
 
@@ -85,6 +84,57 @@ const getMatchDetailsFromHTML = () => {
                 }
 
                 details.battingScores = battingScores;
+
+                let bowlerDiv = divs[3];
+                let bowlingFigures = [];
+
+                let bowlingFigureDivs = bowlerDiv.children;
+
+                if (bowlingFigureDivs.length > 0) {
+                    for (let index in bowlingFigureDivs) {
+                        if (bowlingFigureDivs.hasOwnProperty(index)) {
+                            index = parseInt(index, 10);
+
+                            //ignoring header
+                            if (index > 0) {
+                                let bowlingFigure = {};
+                                let mainDiv = bowlingFigureDivs[index];
+                                let innerDivs = mainDiv.children;
+
+                                if (innerDivs.length > 0) {
+                                    let bowlerDiv = innerDivs[0];
+
+                                    let bowlerLink = bowlerDiv.querySelector('a');
+                                    bowlingFigure.player = bowlerLink.innerText.trim();
+
+                                    let ballsDiv = innerDivs[1];
+                                    let oversString = ballsDiv.innerText;
+                                    let overParts = oversString.split('.');
+                                    let balls = 0;
+                                    let overs = parseInt(overParts[0], 10);
+                                    if (overParts.length === 2) {
+                                        balls = parseInt(overParts[1],10);
+                                    }
+                                    balls += (overs * 6);
+                                    bowlingFigure.balls = balls;
+
+                                    let maidensDiv = innerDivs[2];
+                                    bowlingFigure.maidens = parseInt(maidensDiv.innerText, 10);
+
+                                    let runsDiv = innerDivs[3];
+                                    bowlingFigure.runs = parseInt(runsDiv.innerText, 10);
+
+                                    let wicketsDiv = innerDivs[4];
+                                    bowlingFigure.wickets = parseInt(wicketsDiv.innerText, 10);
+
+                                    bowlingFigures.push(bowlingFigure);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                details.bowlingFigures = bowlingFigures;
             }
 
         }
@@ -187,10 +237,11 @@ const getMatchDetailsFromHTML = () => {
                             scorecards[i] = inningsDetails;
                         }
                     }
-                    // details.scorecards = scorecards;
+
                     let team1Innings = 1;
                     let team2Innings = 1;
                     let battingScores = [];
+                    let bowlingFigures = [];
                     for (let innings in scorecards) {
                         if (scorecards.hasOwnProperty(innings)) {
                             innings = parseInt(innings, 10);
@@ -198,24 +249,34 @@ const getMatchDetailsFromHTML = () => {
                             const inningsObject = scorecards[innings];
 
                             let team = '';
-
+                            let teamInnings = '';
                             let inningsBattingScores = inningsObject.battingScores;
                             for (const battingScore of inningsBattingScores) {
-                                battingScore.teamInnings = ((team1 === battingScore.team) ? team1Innings : team2Innings);
-                                battingScores.push(battingScore);
                                 team = battingScore.team;
+                                teamInnings = ((team1 === team) ? team1Innings : team2Innings);
+                                battingScore.teamInnings = teamInnings;
+                                battingScores.push(battingScore);
+                                battingScore.innings = innings;
                             }
 
-                            // debugger;
+                            let inningsBowlingFigures = inningsObject.bowlingFigures;
+                            for (const bowlingFigure of inningsBowlingFigures) {
+                                bowlingFigure.teamInnings = teamInnings;
+                                bowlingFigure.innings = innings;
+                                bowlingFigures.push(bowlingFigure);
+                            }
+
                             if (team1 === team) {
                                 team1Innings++;
                             } else if (team2 === team) {
                                 team2Innings++;
                             }
                             team = '';
+                            teamInnings = '';
                         }
                     }
                     details.battingScores = battingScores;
+                    details.bowlingFigures = bowlingFigures;
 
                 }
             }
@@ -260,6 +321,7 @@ const getMatchDetailsFromHTML = () => {
         }
 
     } catch(e) {
+        debugger;
         console.log(e);
     }
 
