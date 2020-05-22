@@ -296,14 +296,16 @@ const getMatchDetailsFromHTML = () => {
                 details.winner = winner;
                 details.result = 'BOWL_OUT';
             } else {
-                let matches = resultText.match(/(.*) won by ([0-9]+) ([a-zA-Z]+)/);
-                let winner = matches[1];
-                const winMargin = matches[2];
+                let matches = resultText.match(/(.*) won by([a-zA-Z ]*)([0-9]+) ([a-zA-Z]+)/);
+                const winner = matches[1];
+                const winMargin = matches[3];
+                const winMarginTypeText = matches[4];
+
                 details.winner = winner;
                 details.result = 'NORMAL';
                 details.winMargin = winMargin;
 
-                const winMarginTypeText = matches[3];
+
                 let winMarginType;
                 if (winMarginTypeText.match(/wkt|wicket/)) {
                     winMarginType = 'WICKET';
