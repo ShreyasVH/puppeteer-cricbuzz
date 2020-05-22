@@ -3,6 +3,12 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
+const path = require('path');
+const scriptName = path.basename(__filename);
+
+const fileNameParts = process.argv[1].split('\/');
+const fileName = fileNameParts[fileNameParts.length - 1];
+
 const getMatchDetailsFromHTML = () => {
     const getInningsDetails = inning => {
         let details = {};
@@ -281,10 +287,14 @@ const getMatchDetails = async (matchUrl) => {
 
 exports.getMatchDetails = getMatchDetails;
 
-// (async() => {
-//     const matchUrl = process.argv[2];
-//     const matchDetails = await getMatchDetails(matchUrl);
-//     console.log(JSON.stringify(matchDetails, null, ' '));
-// })();
+if (fileName === scriptName) {
+    (async() => {
+        const matchUrl = process.argv[2];
+        const matchDetails = await getMatchDetails(matchUrl);
+        console.log(JSON.stringify(matchDetails, null, ' '));
+    })();
+}
+
+
 
 
