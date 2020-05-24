@@ -10,6 +10,14 @@ const fileNameParts = process.argv[1].split('\/');
 const fileName = fileNameParts[fileNameParts.length - 1];
 
 const getMatchDetailsFromHTML = () => {
+    const extrasMapping = {
+        b: 'BYE',
+        lb: 'LEG_BYE',
+        w: 'WIDE',
+        nb: 'NO_BALL',
+        p: 'PENALTY'
+    };
+
     const getInningsDetails = inning => {
         let details = {};
 
@@ -19,6 +27,7 @@ const getMatchDetailsFromHTML = () => {
             if (divs.length > 0) {
                 let batsmanDiv = divs[0];
                 let battingScores = [];
+                let extras = [];
                 let battingScoreDivs = batsmanDiv.children;
                 if (battingScoreDivs.length > 0) {
                     const inningsHeader = battingScoreDivs[0];
@@ -52,6 +61,26 @@ const getMatchDetailsFromHTML = () => {
                                             isBattingScoreDiv = true;
                                             let batsman = batsmanLink.innerText.trim();
                                             battingScoreObject.player = batsman;
+                                        } else {
+                                            if (batsmanDiv.innerText === 'Extras') {
+                                                const extrasDiv = innerDivs[2];
+
+                                                const extrasParts = extrasDiv.innerText.trim().replace('(', '').replace(')', '').split(', ');
+                                                for (const extrasObject of extrasParts) {
+                                                    let parts = extrasObject.split(' ');
+                                                    let type = extrasMapping[parts[0]];
+                                                    let runs = parseInt(parts[1], 10);
+
+                                                    if (runs > 0) {
+                                                        extras.push({
+                                                            type,
+                                                            runs
+                                                        });
+                                                    }
+                                                }
+                                            }
+
+                                            details.extras = extras;
                                         }
 
                                         let dismissalDiv = innerDivs[1];
@@ -242,6 +271,7 @@ const getMatchDetailsFromHTML = () => {
                     let team2Innings = 1;
                     let battingScores = [];
                     let bowlingFigures = [];
+                    let extras = [];
                     for (let innings in scorecards) {
                         if (scorecards.hasOwnProperty(innings)) {
                             innings = parseInt(innings, 10);
@@ -266,6 +296,15 @@ const getMatchDetailsFromHTML = () => {
                                 bowlingFigures.push(bowlingFigure);
                             }
 
+                            let extrasObjects = inningsObject.extras;
+                            for (const extrasObject of extrasObjects) {
+                                extrasObject.innings = innings;
+                                extrasObject.teamInnings = teamInnings;
+                                extrasObject.battingTeam = team;
+                                extrasObject.bowlingTeam = ((team == team1) ? team2 : team1);
+                                extras.push(extrasObject);
+                            }
+
                             if (team1 === team) {
                                 team1Innings++;
                             } else if (team2 === team) {
@@ -277,7 +316,7 @@ const getMatchDetailsFromHTML = () => {
                     }
                     details.battingScores = battingScores;
                     details.bowlingFigures = bowlingFigures;
-
+                    details.extras = extras;
                 }
             }
         }
