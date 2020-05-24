@@ -18,6 +18,8 @@ const getMatchDetailsFromHTML = () => {
         p: 'PENALTY'
     };
 
+    // const dismissals
+
     const getInningsDetails = inning => {
         let details = {};
 
@@ -83,9 +85,67 @@ const getMatchDetailsFromHTML = () => {
                                             details.extras = extras;
                                         }
 
-                                        let dismissalDiv = innerDivs[1];
-
                                         if (isBattingScoreDiv) {
+                                            const dismissalDiv = innerDivs[1];
+                                            const dismissalText = dismissalDiv.innerText;
+                                            let dismissalMode = null;
+                                            let fielders;
+                                            let bowler;
+                                            if (dismissalText.match(/not out/)) {
+                                                // dism
+                                            } else if (dismissalText.match(/lbw b (.*)/)) {
+                                                dismissalMode = 'LBW';
+                                                let matches = dismissalText.match(/lbw b (.*)/);
+                                                bowler = matches[1];
+                                            } else if(dismissalText.match(/run out (.*)/)) {
+                                                dismissalMode = 'Run Out';
+                                                let matches = dismissalText.match(/run out (.*)/);
+                                                let fieldersText = matches[1].replace('(', '').replace(')', '');
+                                                let fielderParts = fieldersText.split('/');
+                                                fielders = fielderParts.join(', ');
+                                            } else if(dismissalText.match(/hit wicket b (.*)/)) {
+                                                dismissalMode = 'Hit Wicket';
+                                                let matches = dismissalText.match(/hit wicket b (.*)/);
+                                                bowler = matches[1];
+                                            } else if(dismissalText.match(/handled the ball/)) {
+                                                dismissalMode = 'Handled the Ball';
+                                            } else if(dismissalText.match(/retd hurt/)) {
+                                                dismissalMode = 'Retired Hurt';
+                                            } else if(dismissalText.match(/st (.*) b (.*)/)) {
+                                                dismissalMode = 'Stumped';
+                                                let matches = dismissalText.match(/st (.*) b (.*)/);
+                                                fielders = matches[1];
+                                                bowler = matches[2];
+                                            } else if(dismissalText.match(/c & b (.*)/)) {
+                                                dismissalMode = 'Caught';
+                                                let matches = dismissalText.match(/c & b (.*)/);
+                                                fielders = matches[1];
+                                                bowler = matches[1];
+                                            } else if(dismissalText.match(/c (.*) b (.*)/)) {
+                                                dismissalMode = 'Caught';
+                                                let matches = dismissalText.match(/c (.*) b (.*)/);
+                                                fielders = matches[1];
+                                                bowler = matches[2];
+                                            } else if(dismissalText.match(/b (.*)/)) {
+                                                dismissalMode = 'Bowled';
+                                                let matches = dismissalText.match(/b (.*)/);
+                                                bowler = matches[1];
+                                            } else if(dismissalText.match(/obs/)) {
+                                                dismissalMode = 'Obstructing the Field';
+                                            }
+
+                                            if (dismissalMode) {
+                                                battingScoreObject.dismissalMode = dismissalMode;
+
+                                                if (fielders) {
+                                                    battingScoreObject.fielders = fielders;
+                                                }
+
+                                                if (bowler) {
+                                                    battingScoreObject.bowler = bowler;
+                                                }
+                                            }
+
                                             let runsDiv = innerDivs[2];
                                             battingScoreObject.runs = parseInt(runsDiv.innerText, 10);
 
