@@ -92,7 +92,7 @@ const getMatchDetailsFromHTML = () => {
                                             let fielders;
                                             let bowler;
                                             if (dismissalText.match(/not out/)) {
-                                                // dism
+
                                             } else if (dismissalText.match(/lbw b (.*)/)) {
                                                 dismissalMode = 'LBW';
                                                 let matches = dismissalText.match(/lbw b (.*)/);
@@ -230,8 +230,6 @@ const getMatchDetailsFromHTML = () => {
 
         return details;
     };
-
-
 
     let details = {};
 
@@ -378,6 +376,9 @@ const getMatchDetailsFromHTML = () => {
                     details.bowlingFigures = bowlingFigures;
                     details.extras = extras;
                 }
+            } else if (fieldName === 'Venue') {
+                const stadiumTextParts = fieldValue.split(', ');
+                details.stadium = stadiumTextParts[0];
             }
         }
 
