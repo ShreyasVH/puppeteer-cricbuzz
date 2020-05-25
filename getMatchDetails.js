@@ -61,8 +61,8 @@ const getMatchDetailsFromHTML = () => {
                                         let isBattingScoreDiv = false;
                                         if (null != batsmanLink) {
                                             isBattingScoreDiv = true;
-                                            let batsman = batsmanLink.innerText.trim();
-                                            battingScoreObject.player = batsman;
+                                            const matches = batsmanLink.title.match(/View profile of (.*)/);
+                                            battingScoreObject.player = matches[1];
                                         } else {
                                             if (batsmanDiv.innerText === 'Extras') {
                                                 const extrasDiv = innerDivs[2];
@@ -194,7 +194,8 @@ const getMatchDetailsFromHTML = () => {
                                     let bowlerDiv = innerDivs[0];
 
                                     let bowlerLink = bowlerDiv.querySelector('a');
-                                    bowlingFigure.player = bowlerLink.innerText.trim();
+                                    const matches = bowlerLink.title.match(/View profile of (.*)/);
+                                    bowlingFigure.player = matches[1];
 
                                     let ballsDiv = innerDivs[1];
                                     let oversString = ballsDiv.innerText;
