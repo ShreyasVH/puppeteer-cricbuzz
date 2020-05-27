@@ -35,4 +35,6 @@ foreach($files as $file)
 	}
 }
 
+usort($stadiums, 'strcasecmp');
+
 file_put_contents(APP_PATH . 'data/stadiums.json', json_encode($stadiums, JSON_PRETTY_PRINT));
