@@ -34,19 +34,16 @@ foreach($files as $file)
 					if(array_key_exists($team, $playerData))
 					{
 						$existingPlayers = $playerData[$team];
-						// var_dump($existingPlayers);die;
 						if(!in_array($playerName, $existingPlayers))
 						{
 							$playerData[$team][] = $playerName;
 						}
-						 
 					}
 					else
 					{
 						$playerData[$team] = [
 							$playerName
 						];
-						// var_dump($playerDetails);die;
 					}
 				}
 			}
@@ -54,5 +51,13 @@ foreach($files as $file)
 		}
 	}
 }
+
+foreach($playerData as $team => $players)
+{
+	usort($players, 'strcasecmp');
+	$playerData[$team] = $players;
+}
+
+uksort($playerData, 'strcasecmp');
 
 file_put_contents(APP_PATH . 'data/players.json', json_encode($playerData, JSON_PRETTY_PRINT));
