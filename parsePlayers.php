@@ -48,6 +48,32 @@ foreach($files as $file)
 				}
 			}
 			
+			if(array_key_exists('bench', $matchDetails))
+			{
+				$bench = $matchDetails['bench'];
+
+				foreach($bench as $playerDetails)
+				{
+					$team = $playerDetails['team'];
+					$playerName = $playerDetails['player'];
+					echo "\n\t\t" . $team . "\n";
+					echo "\n\t\t" . $playerName . "\n";
+					if(array_key_exists($team, $playerData))
+					{
+						$existingPlayers = $playerData[$team];
+						if(!in_array($playerName, $existingPlayers))
+						{
+							$playerData[$team][] = $playerName;
+						}
+					}
+					else
+					{
+						$playerData[$team] = [
+							$playerName
+						];
+					}
+				}
+			}
 		}
 	}
 }

@@ -116,11 +116,11 @@ const getMatchDetailsFromHTML = () => {
                                                 let matches = dismissalText.match(/st (.*) b (.*)/);
                                                 fielders = matches[1];
                                                 bowler = matches[2];
-                                            } else if(dismissalText.match(/c & b (.*)/)) {
+                                            } else if(dismissalText.match(/(c & b|c and b) (.*)/)) {
                                                 dismissalMode = 'Caught';
-                                                let matches = dismissalText.match(/c & b (.*)/);
-                                                fielders = matches[1];
-                                                bowler = matches[1];
+                                                let matches = dismissalText.match(/(c & b|c and b) (.*)/);
+                                                fielders = matches[2];
+                                                bowler = matches[2];
                                             } else if(dismissalText.match(/c (.*) b (.*)/)) {
                                                 dismissalMode = 'Caught';
                                                 let matches = dismissalText.match(/c (.*) b (.*)/);
@@ -138,6 +138,7 @@ const getMatchDetailsFromHTML = () => {
                                                 battingScoreObject.dismissalMode = dismissalMode;
 
                                                 if (fielders) {
+                                                    fielders = fielders.replace(/\(sub\)/g, '');
                                                     battingScoreObject.fielders = fielders;
                                                 }
 
@@ -238,6 +239,7 @@ const getMatchDetailsFromHTML = () => {
         let team1;
         let team2;
         let players = [];
+        let bench = [];
         let teamsElements = document.querySelectorAll('.cb-minfo-tm-nm');
         if (teamsElements.length === 6) {
             for (let index in teamsElements) {
@@ -274,6 +276,24 @@ const getMatchDetailsFromHTML = () => {
                     }
                 }
 
+                if (index === 2) {
+                    const divs = teamElement.querySelectorAll('div');
+                    const playerDiv = divs[1];
+                    const playerElements = playerDiv.querySelectorAll('a');
+
+                    for (const playerElement of playerElements) {
+                        const title = playerElement.title;
+                        const matches = title.match(/View profile of (.*)/);
+                        const name = matches[1];
+
+                        let player = {
+                            player: name,
+                            team: team1
+                        };
+                        bench.push(player);
+                    }
+                }
+
                 if (index === 4) {
                     const divs = teamElement.querySelectorAll('div');
                     const playerDiv = divs[1];
@@ -291,7 +311,26 @@ const getMatchDetailsFromHTML = () => {
                         players.push(player);
                     }
                 }
+
+                if (index === 5) {
+                    const divs = teamElement.querySelectorAll('div');
+                    const playerDiv = divs[1];
+                    const playerElements = playerDiv.querySelectorAll('a');
+
+                    for (const playerElement of playerElements) {
+                        const title = playerElement.title;
+                        const matches = title.match(/View profile of (.*)/);
+                        const name = matches[1];
+
+                        let player = {
+                            player: name,
+                            team: team2
+                        };
+                        bench.push(player);
+                    }
+                }
                 details.players = players;
+                details.bench = bench;
             }
         }
 
