@@ -29,7 +29,11 @@ function getSeriesListFromHTML() {
 const getSeriesList = async year => {
     const browser  = await puppeteer.launch({
         headless: true,
-        devtools: true
+        devtools: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
     });
 
     const url = 'https://www.cricbuzz.com/cricket-scorecard-archives/' + year;

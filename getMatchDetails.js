@@ -470,10 +470,42 @@ const getMatchDetailsFromHTML = () => {
     return details;
 };
 
+const getPlayersOfMatchDetailsFromHTML = () => {
+    let details = {};
+    let motm = [];
+    let mots = [];
+    const motmElements = document.querySelectorAll('.cb-mom-itm');
+
+    for(const motmElement of motmElements) {
+        let label = motmElement.querySelector('span').innerText;
+        let playerLink = motmElement.querySelector('a');
+        let player = playerLink.innerText;
+        if (label === 'PLAYER OF THE MATCH') {
+            motm.push(player);
+        } else if (label === 'PLAYER OF THE SERIES') {
+            mots.push(player);
+        }
+    }
+
+    if (motm.length > 0) {
+        details.manOfTheMatchList = motm;
+    }
+
+    if (mots.length > 0) {
+        details.manOfTheSeriesList = mots;
+    }
+
+    return details;
+};
+
 const getMatchDetails = async (matchUrl) => {
     const browser  = await puppeteer.launch({
         headless: true,
-        devtools: true
+        devtools: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
     });
 
     const page = await browser.newPage();
@@ -485,6 +517,16 @@ const getMatchDetails = async (matchUrl) => {
     let details = await page.evaluate(getMatchDetailsFromHTML);
     await page.close();
 
+    let commentaryUrl = matchUrl.replace('live-cricket-scorecard', 'cricket-scores');
+
+    const motmPage = await browser.newPage();
+    await motmPage.goto(commentaryUrl, {
+        waitUntil: 'networkidle2',
+        timeout: 0
+    });
+    let motmDetails = await motmPage.evaluate(getPlayersOfMatchDetailsFromHTML);
+    details = Object.assign({}, details, motmDetails);
+
     await browser.close();
     return details;
 };
@@ -495,7 +537,13 @@ if (fileName === scriptName) {
     (async() => {
         const matchUrl = process.argv[2];
         const matchDetails = await getMatchDetails(matchUrl);
-        console.log(JSON.stringify(matchDetails, null, ' '));
+        // console.log(JSON.stringify(matchDetails, null, ' '));
+
+        fs.writeFile('data/matchDetails.json', JSON.stringify(matchDetails, null, ' '), error => {
+            if (error) {
+                console.log("\n\t\tError while writing card data. Error: " + error + "\n");
+            }
+        });
     })();
 }
 

@@ -37,7 +37,11 @@ const getMatchList = async (seriesUrl) => {
 
     const browser  = await puppeteer.launch({
         headless: true,
-        devtools: true
+        devtools: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
     });
 
     try {
