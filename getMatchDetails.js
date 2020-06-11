@@ -462,6 +462,11 @@ const getMatchDetailsFromHTML = () => {
             details.result = 'WASHED_OUT';
         }
 
+        const timeElement = document.querySelector('.schedule-date');
+        if (timeElement) {
+            details.startTime = timeElement.getAttribute('timestamp');
+        }
+
     } catch(e) {
         debugger;
         console.log(e);
