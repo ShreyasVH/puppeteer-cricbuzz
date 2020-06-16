@@ -416,9 +416,6 @@ const getMatchDetailsFromHTML = () => {
                     details.bowlingFigures = bowlingFigures;
                     details.extras = extras;
                 }
-            } else if (fieldName === 'Venue') {
-                const stadiumTextParts = fieldValue.split(', ');
-                details.stadium = stadiumTextParts[0];
             }
         }
 
@@ -466,6 +463,9 @@ const getMatchDetailsFromHTML = () => {
         if (timeElement) {
             details.startTime = timeElement.getAttribute('timestamp');
         }
+
+        const stadiumElement = document.querySelector('a[itemprop="location"]');
+        details.stadiumURL = stadiumElement.href;
 
     } catch(e) {
         debugger;
@@ -532,7 +532,38 @@ const getMatchDetails = async (matchUrl) => {
     let motmDetails = await motmPage.evaluate(getPlayersOfMatchDetailsFromHTML);
     details = Object.assign({}, details, motmDetails);
 
+    let stadiumUrl = details.stadiumURL;
+    let stadiumPage = await browser.newPage();
+    await stadiumPage.goto(stadiumUrl, {
+        waitUntil: 'networkidle2',
+        timeout: 0
+    });
+    details.stadium = await stadiumPage.evaluate(getStadiumDetails);
+
     await browser.close();
+    return details;
+};
+
+const getStadiumDetails = () => {
+    let details = {};
+
+    let nameElement = document.querySelector('h1');
+    details.name = nameElement.innerText;
+
+    let detailsElement = document.querySelector('table');
+    let rows = detailsElement.querySelectorAll('tr');
+    for (const row of rows) {
+        let cells = row.children;
+        const key = cells[0].innerText;
+        const value = cells[1].innerText;
+
+        if (key === 'Location') {
+            const locationParts = value.split(', ');
+            details.city = locationParts[0];
+            details.country = locationParts[locationParts.length - 1];
+        }
+    }
+
     return details;
 };
 
