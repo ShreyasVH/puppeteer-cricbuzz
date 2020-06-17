@@ -270,7 +270,8 @@ const getMatchDetailsFromHTML = () => {
 
                         let player = {
                             player: name,
-                            team: team1
+                            team: team1,
+                            link: playerElement.href
                         };
                         players.push(player);
                     }
@@ -288,7 +289,8 @@ const getMatchDetailsFromHTML = () => {
 
                         let player = {
                             player: name,
-                            team: team1
+                            team: team1,
+                            link: playerElement.href
                         };
                         bench.push(player);
                     }
@@ -306,7 +308,8 @@ const getMatchDetailsFromHTML = () => {
 
                         let player = {
                             player: name,
-                            team: team2
+                            team: team2,
+                            link: playerElement.href
                         };
                         players.push(player);
                     }
@@ -324,7 +327,8 @@ const getMatchDetailsFromHTML = () => {
 
                         let player = {
                             player: name,
-                            team: team2
+                            team: team2,
+                            link: playerElement.href
                         };
                         bench.push(player);
                     }
@@ -540,6 +544,34 @@ const getMatchDetails = async (matchUrl) => {
     });
     details.stadium = await stadiumPage.evaluate(getStadiumDetails);
 
+    for (let player of details.players) {
+        console.log("\nProcessing Player - " + player.player + "\n");
+        let playerURL = player.link;
+        let playerPage = await browser.newPage();
+        await playerPage.goto(playerURL, {
+            waitUntil: 'networkidle2',
+            timeout: 0
+        });
+        const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
+        if (playerDetails.country) {
+            player.country = playerDetails.country;
+        }
+    }
+
+    for (let player of details.bench) {
+        console.log("\nProcessing Player - " + player.player + "\n");
+        let playerURL = player.link;
+        let playerPage = await browser.newPage();
+        await playerPage.goto(playerURL, {
+            waitUntil: 'networkidle2',
+            timeout: 0
+        });
+        const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
+        if (playerDetails.country) {
+            player.country = playerDetails.country;
+        }
+    }
+
     await browser.close();
     return details;
 };
@@ -564,6 +596,16 @@ const getStadiumDetails = () => {
         }
     }
 
+    return details;
+};
+
+const getPlayerDetailsFromHTML = () => {
+    let details = {};
+
+    let countryElement = document.querySelector('.cb-player-name-wrap .text-gray');
+    if (null != countryElement) {
+        details.country = countryElement.innerText;
+    }
     return details;
 };
 
