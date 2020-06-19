@@ -559,7 +559,6 @@ const getMatchDetails = async (matchUrl) => {
     }
 
     for (let player of details.bench) {
-        console.log("\nProcessing Player - " + player.player + "\n");
         let playerURL = player.link;
         let playerPage = await browser.newPage();
         await playerPage.goto(playerURL, {

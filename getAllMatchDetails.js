@@ -28,12 +28,10 @@ if (process.argv.length >= 4) {
                 let tourIndex = 1;
                 for (const tour of tourList) {
                     if (tourIndex > 1) {
-                        break;
+                        // break;
                         console.log("\n\t--------------------------------------------\n");
                     }
                     console.log("\n\tProcessing tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
-
-                    details[tour.name] = {};
 
                     let tourDetails = await getTourDetails(tour.link);
                     details[tour.name] = {
@@ -46,7 +44,7 @@ if (process.argv.length >= 4) {
                     let seriesIndex = 1;
                     for (const gameType of seriesList) {
                         if (seriesIndex > 1) {
-                            break;
+                            // break;
                             console.log("\n\t\t:::::::::::::::::::::::::::::::::::\n");
                         }
                         console.log("\n\t\tProcessing " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
@@ -61,7 +59,7 @@ if (process.argv.length >= 4) {
                         let matchIndex = 1;
                         for (const match of matchList) {
                             if (matchIndex > 1) {
-                                break;
+                                // break;
                                 console.log("\n\t\t\t.....................................\n");
                             }
                             console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
