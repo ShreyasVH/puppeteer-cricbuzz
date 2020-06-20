@@ -18,6 +18,10 @@ if (process.argv.length >= 4) {
         (async() => {
             for (let year = start; year <= end; year++) {
                 let details = {};
+                let fileName = 'data/yearWiseDetails/' + year + '.json';
+                if (fs.existsSync(fileName)) {
+                    details = JSON.parse(fs.readFileSync(fileName));
+                }
                 if (year > start) {
                     console.log("\n.........................................\n");
                 }
@@ -36,11 +40,13 @@ if (process.argv.length >= 4) {
 
                         try {
                             let tourDetails = await getTourDetails(tour.link);
-                            details[tour.name] = {
-                                startTime: tourDetails.startTime,
-                                endTime: tourDetails.endTime,
-                                series: {}
-                            };
+                            if (!details.hasOwnProperty(tour.name)) {
+                                details[tour.name] = {
+                                    startTime: tourDetails.startTime,
+                                    endTime: tourDetails.endTime,
+                                    series: {}
+                                };
+                            }
 
                             const seriesList = Object.keys(tourDetails.series);
                             let seriesIndex = 1;
@@ -51,11 +57,13 @@ if (process.argv.length >= 4) {
                                 }
                                 console.log("\n\t\tProcessing " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
                                 const series = tourDetails.series[gameType];
-                                details[tour.name].series[gameType] = {
-                                    startTime: series.startTime,
-                                    endTime: series.endTime,
-                                    matches: {}
-                                };
+                                if (!details[tour.name].series.hasOwnProperty(gameType)) {
+                                    details[tour.name].series[gameType] = {
+                                        startTime: series.startTime,
+                                        endTime: series.endTime,
+                                        matches: {}
+                                    };
+                                }
 
                                 const matchList = series.matches;
                                 let matchIndex = 1;
@@ -66,20 +74,21 @@ if (process.argv.length >= 4) {
                                     }
                                     console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
 
-                                    try {
-                                        details[tour.name].series[gameType].matches[match.name] = await getMatchDetails(match.link);
-                                        fs.writeFile('data/yearWiseDetails/' + year + '.json', JSON.stringify(details, null, ' '), error => {
-                                            if (error) {
-                                                console.log("\n\t\tError while writing card data. Error: " + error + "\n");
-                                            }
-                                        });
-                                    } catch (e) {
-                                        console.log("\nError while getting match details. Exception: " + e + "\n");
-                                        details[tour.name].series[gameType].matches[match.name] = {};
+                                    if (!details[tour.name].series[gameType].matches.hasOwnProperty(match.name) || (Object.keys(details[tour.name].series[gameType].matches[match.name]).length === 0)) {
+                                        try {
+                                            details[tour.name].series[gameType].matches[match.name] = await getMatchDetails(match.link);
+                                            fs.writeFile(fileName, JSON.stringify(details, null, ' '), error => {
+                                                if (error) {
+                                                    console.log("\n\t\tError while writing card data. Error: " + error + "\n");
+                                                }
+                                            });
+                                        } catch (e) {
+                                            console.log("\nError while getting match details. Exception: " + e + "\n");
+                                            details[tour.name].series[gameType].matches[match.name] = {};
+                                        }
                                     }
 
                                     console.log("\n\t\t\tProcessed match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
-
                                     matchIndex++;
                                 }
 
