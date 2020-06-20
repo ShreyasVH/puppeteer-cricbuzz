@@ -23,68 +23,81 @@ if (process.argv.length >= 4) {
                 }
                 console.log("\nProcessing year - " + year + "\n");
 
-                let tourList = await getTourList(year);
+                try {
+                    let tourList = await getTourList(year);
 
-                let tourIndex = 1;
-                for (const tour of tourList) {
-                    if (tourIndex > 1) {
-                        // break;
-                        console.log("\n\t--------------------------------------------\n");
-                    }
-                    console.log("\n\tProcessing tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
-
-                    let tourDetails = await getTourDetails(tour.link);
-                    details[tour.name] = {
-                        startTime: tourDetails.startTime,
-                        endTime: tourDetails.endTime,
-                        series: {}
-                    };
-
-                    const seriesList = Object.keys(tourDetails.series);
-                    let seriesIndex = 1;
-                    for (const gameType of seriesList) {
-                        if (seriesIndex > 1) {
+                    let tourIndex = 1;
+                    for (const tour of tourList) {
+                        if (tourIndex > 1) {
                             // break;
-                            console.log("\n\t\t:::::::::::::::::::::::::::::::::::\n");
+                            console.log("\n\t--------------------------------------------\n");
                         }
-                        console.log("\n\t\tProcessing " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
-                        const series = tourDetails.series[gameType];
-                        details[tour.name].series[gameType] = {
-                            startTime: series.startTime,
-                            endTime: series.endTime,
-                            matches: {}
-                        };
+                        console.log("\n\tProcessing tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
 
-                        const matchList = series.matches;
-                        let matchIndex = 1;
-                        for (const match of matchList) {
-                            if (matchIndex > 1) {
-                                // break;
-                                console.log("\n\t\t\t.....................................\n");
+                        try {
+                            let tourDetails = await getTourDetails(tour.link);
+                            details[tour.name] = {
+                                startTime: tourDetails.startTime,
+                                endTime: tourDetails.endTime,
+                                series: {}
+                            };
+
+                            const seriesList = Object.keys(tourDetails.series);
+                            let seriesIndex = 1;
+                            for (const gameType of seriesList) {
+                                if (seriesIndex > 1) {
+                                    // break;
+                                    console.log("\n\t\t:::::::::::::::::::::::::::::::::::\n");
+                                }
+                                console.log("\n\t\tProcessing " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
+                                const series = tourDetails.series[gameType];
+                                details[tour.name].series[gameType] = {
+                                    startTime: series.startTime,
+                                    endTime: series.endTime,
+                                    matches: {}
+                                };
+
+                                const matchList = series.matches;
+                                let matchIndex = 1;
+                                for (const match of matchList) {
+                                    if (matchIndex > 1) {
+                                        // break;
+                                        console.log("\n\t\t\t.....................................\n");
+                                    }
+                                    console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
+
+                                    try {
+                                        details[tour.name].series[gameType].matches[match.name] = await getMatchDetails(match.link);
+                                        fs.writeFile('data/yearWiseDetails/' + year + '.json', JSON.stringify(details, null, ' '), error => {
+                                            if (error) {
+                                                console.log("\n\t\tError while writing card data. Error: " + error + "\n");
+                                            }
+                                        });
+                                    } catch (e) {
+                                        console.log("\nError while getting match details. Exception: " + e + "\n");
+                                        details[tour.name].series[gameType].matches[match.name] = {};
+                                    }
+
+                                    console.log("\n\t\t\tProcessed match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
+
+                                    matchIndex++;
+                                }
+
+                                console.log("\n\t\tProcessed " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
+                                seriesIndex++;
                             }
-                            console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
-
-                            details[tour.name].series[gameType].matches[match.name] = await getMatchDetails(match.link);
-
-                            console.log("\n\t\t\tProcessed match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
-
-                            matchIndex++;
+                        } catch (e) {
+                            console.log("\nError while getting tour details. Exception: " + e + "\n");
                         }
 
-                        console.log("\n\t\tProcessed " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
-                        seriesIndex++;
+                        console.log("\n\tProcessed tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
+                        tourIndex++;
                     }
-
-                    console.log("\n\tProcessed tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
-                    tourIndex++;
+                } catch (e) {
+                    console.log("\nError while getting tourlist. Exception: " + e + "\n");
                 }
 
                 console.log("\nProcessed year - " + year + "\n");
-                fs.writeFile('data/yearWiseDetails/' + year + '.json', JSON.stringify(details, null, ' '), error => {
-                    if (error) {
-                        console.log("\n\t\tError while writing card data. Error: " + error + "\n");
-                    }
-                });
             }
         })();
     }
