@@ -77,16 +77,19 @@ if (process.argv.length >= 4) {
                                     if (!details[tour.name].series[gameType].matches.hasOwnProperty(match.name) || (Object.keys(details[tour.name].series[gameType].matches[match.name]).length === 0)) {
                                         try {
                                             details[tour.name].series[gameType].matches[match.name] = await getMatchDetails(match.link);
-                                            fs.writeFile(fileName, JSON.stringify(details, null, ' '), error => {
-                                                if (error) {
-                                                    console.log("\n\t\tError while writing card data. Error: " + error + "\n");
-                                                }
-                                            });
                                         } catch (e) {
                                             console.log("\nError while getting match details. Exception: " + e + "\n");
-                                            details[tour.name].series[gameType].matches[match.name] = {};
+                                            details[tour.name].series[gameType].matches[match.name] = {
+                                                error: e
+                                            };
                                         }
                                     }
+
+                                    fs.writeFile(fileName, JSON.stringify(details, null, ' '), error => {
+                                        if (error) {
+                                            console.log("\n\t\tError while writing card data. Error: " + error + "\n");
+                                        }
+                                    });
 
                                     console.log("\n\t\t\tProcessed match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
                                     matchIndex++;
