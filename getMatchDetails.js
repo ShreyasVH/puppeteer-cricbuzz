@@ -544,30 +544,33 @@ const getMatchDetails = async (matchUrl) => {
     });
     details.stadium = await stadiumPage.evaluate(getStadiumDetails);
 
-    for (let player of details.players) {
-        console.log("\nProcessing Player - " + player.player + "\n");
-        let playerURL = player.link;
-        let playerPage = await browser.newPage();
-        await playerPage.goto(playerURL, {
-            waitUntil: 'networkidle2',
-            timeout: 0
-        });
-        const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
-        if (playerDetails.country) {
-            player.country = playerDetails.country;
+    if (details.players && details.players.length > 0) {
+        for (let player of details.players) {
+            let playerURL = player.link;
+            let playerPage = await browser.newPage();
+            await playerPage.goto(playerURL, {
+                waitUntil: 'networkidle2',
+                timeout: 0
+            });
+            const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
+            if (playerDetails.country) {
+                player.country = playerDetails.country;
+            }
         }
     }
 
-    for (let player of details.bench) {
-        let playerURL = player.link;
-        let playerPage = await browser.newPage();
-        await playerPage.goto(playerURL, {
-            waitUntil: 'networkidle2',
-            timeout: 0
-        });
-        const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
-        if (playerDetails.country) {
-            player.country = playerDetails.country;
+    if (details.bench && details.bench.length > 0) {
+        for (let player of details.bench) {
+            let playerURL = player.link;
+            let playerPage = await browser.newPage();
+            await playerPage.goto(playerURL, {
+                waitUntil: 'networkidle2',
+                timeout: 0
+            });
+            const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
+            if (playerDetails.country) {
+                player.country = playerDetails.country;
+            }
         }
     }
 
