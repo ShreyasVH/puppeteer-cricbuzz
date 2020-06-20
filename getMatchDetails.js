@@ -27,205 +27,220 @@ const getMatchDetailsFromHTML = () => {
         if (inningsDiv) {
             let divs = inningsDiv.children;
             if (divs.length > 0) {
-                let batsmanDiv = divs[0];
-                let battingScores = [];
-                let extras = [];
-                let battingScoreDivs = batsmanDiv.children;
-                if (battingScoreDivs.length > 0) {
-                    const inningsHeader = battingScoreDivs[0];
-                    const inningsHeaderChildren = inningsHeader.children;
-                    if (inningsHeaderChildren.length > 0) {
-                        let inningsTextSpan = inningsHeaderChildren[0];
-                        let inningsText = inningsTextSpan.innerText;
-                        let matches = inningsText.match(/(.*) Innings/);
-                        let team = matches[1];
-                        if (team.match(/1st/)) {
-                            team = team.replace(' 1st', '');
-                        } else if (team.match(/2nd/)) {
-                            team = team.replace(' 2nd', '');
-                        }
+                let batsmanDiv;
+                let bowlerDiv;
 
-                        for (let index in battingScoreDivs) {
-                            let battingScoreObject = {};
-                            if (battingScoreDivs.hasOwnProperty(index)) {
-                                index = parseInt(index, 10);
+                for (const div of divs) {
+                    if (div.innerText.indexOf('Batsman') !== -1) {
+                        batsmanDiv = div;
+                    }
 
-                                //ignoring header and innings title
-                                if (index > 1) {
-                                    let scoreDiv = battingScoreDivs[index];
-                                    let innerDivs = scoreDiv.children;
-                                    if (innerDivs.length > 0) {
-                                        let batsmanDiv = innerDivs[0];
+                    if (div.innerText.indexOf('Bowler') !== -1) {
+                        bowlerDiv = div;
+                    }
+                }
 
-                                        let batsmanLink = batsmanDiv.querySelector('a');
-                                        let isBattingScoreDiv = false;
-                                        if (null != batsmanLink) {
-                                            isBattingScoreDiv = true;
-                                            const matches = batsmanLink.title.match(/View profile of (.*)/);
-                                            battingScoreObject.player = matches[1];
-                                        } else {
-                                            if (batsmanDiv.innerText === 'Extras') {
-                                                const extrasDiv = innerDivs[2];
+                if (batsmanDiv) {
+                    let battingScores = [];
 
-                                                const extrasParts = extrasDiv.innerText.trim().replace('(', '').replace(')', '').split(', ');
-                                                for (const extrasObject of extrasParts) {
-                                                    let parts = extrasObject.split(' ');
-                                                    let type = extrasMapping[parts[0]];
-                                                    let runs = parseInt(parts[1], 10);
+                    let extras = [];
+                    let battingScoreDivs = batsmanDiv.children;
+                    if (battingScoreDivs.length > 0) {
+                        const inningsHeader = battingScoreDivs[0];
+                        const inningsHeaderChildren = inningsHeader.children;
+                        if (inningsHeaderChildren.length > 0) {
+                            let inningsTextSpan = inningsHeaderChildren[0];
+                            let inningsText = inningsTextSpan.innerText;
+                            let matches = inningsText.match(/(.*) Innings/);
+                            let team = matches[1];
+                            if (team.match(/1st/)) {
+                                team = team.replace(' 1st', '');
+                            } else if (team.match(/2nd/)) {
+                                team = team.replace(' 2nd', '');
+                            }
 
-                                                    if (runs > 0) {
-                                                        extras.push({
-                                                            type,
-                                                            runs
-                                                        });
+                            for (let index in battingScoreDivs) {
+                                let battingScoreObject = {};
+                                if (battingScoreDivs.hasOwnProperty(index)) {
+                                    index = parseInt(index, 10);
+
+                                    //ignoring header and innings title
+                                    if (index > 1) {
+                                        let scoreDiv = battingScoreDivs[index];
+                                        let innerDivs = scoreDiv.children;
+                                        if (innerDivs.length > 0) {
+                                            let batsmanDiv = innerDivs[0];
+
+                                            let batsmanLink = batsmanDiv.querySelector('a');
+                                            let isBattingScoreDiv = false;
+                                            if (null != batsmanLink) {
+                                                isBattingScoreDiv = true;
+                                                const matches = batsmanLink.title.match(/View profile of (.*)/);
+                                                battingScoreObject.player = matches[1];
+                                            } else {
+                                                if (batsmanDiv.innerText === 'Extras') {
+                                                    const extrasDiv = innerDivs[2];
+
+                                                    const extrasParts = extrasDiv.innerText.trim().replace('(', '').replace(')', '').split(', ');
+                                                    for (const extrasObject of extrasParts) {
+                                                        let parts = extrasObject.split(' ');
+                                                        let type = extrasMapping[parts[0]];
+                                                        let runs = parseInt(parts[1], 10);
+
+                                                        if (runs > 0) {
+                                                            extras.push({
+                                                                type,
+                                                                runs
+                                                            });
+                                                        }
                                                     }
                                                 }
+
+                                                details.extras = extras;
                                             }
 
-                                            details.extras = extras;
-                                        }
+                                            if (isBattingScoreDiv) {
+                                                const dismissalDiv = innerDivs[1];
+                                                const dismissalText = dismissalDiv.innerText;
+                                                let dismissalMode = null;
+                                                let fielders;
+                                                let bowler;
+                                                if (dismissalText.match(/not out/)) {
 
-                                        if (isBattingScoreDiv) {
-                                            const dismissalDiv = innerDivs[1];
-                                            const dismissalText = dismissalDiv.innerText;
-                                            let dismissalMode = null;
-                                            let fielders;
-                                            let bowler;
-                                            if (dismissalText.match(/not out/)) {
-
-                                            } else if (dismissalText.match(/lbw b (.*)/)) {
-                                                dismissalMode = 'LBW';
-                                                let matches = dismissalText.match(/lbw b (.*)/);
-                                                bowler = matches[1];
-                                            } else if(dismissalText.match(/run out (.*)/)) {
-                                                dismissalMode = 'Run Out';
-                                                let matches = dismissalText.match(/run out (.*)/);
-                                                let fieldersText = matches[1].replace('(', '').replace(')', '');
-                                                let fielderParts = fieldersText.split('/');
-                                                fielders = fielderParts.join(', ');
-                                            } else if(dismissalText.match(/hit wicket b (.*)/)) {
-                                                dismissalMode = 'Hit Wicket';
-                                                let matches = dismissalText.match(/hit wicket b (.*)/);
-                                                bowler = matches[1];
-                                            } else if(dismissalText.match(/handled the ball/)) {
-                                                dismissalMode = 'Handled the Ball';
-                                            } else if(dismissalText.match(/retd hurt/)) {
-                                                dismissalMode = 'Retired Hurt';
-                                            } else if(dismissalText.match(/st (.*) b (.*)/)) {
-                                                dismissalMode = 'Stumped';
-                                                let matches = dismissalText.match(/st (.*) b (.*)/);
-                                                fielders = matches[1];
-                                                bowler = matches[2];
-                                            } else if(dismissalText.match(/(c & b|c and b) (.*)/)) {
-                                                dismissalMode = 'Caught';
-                                                let matches = dismissalText.match(/(c & b|c and b) (.*)/);
-                                                fielders = matches[2];
-                                                bowler = matches[2];
-                                            } else if(dismissalText.match(/c (.*) b (.*)/)) {
-                                                dismissalMode = 'Caught';
-                                                let matches = dismissalText.match(/c (.*) b (.*)/);
-                                                fielders = matches[1];
-                                                bowler = matches[2];
-                                            } else if(dismissalText.match(/b (.*)/)) {
-                                                dismissalMode = 'Bowled';
-                                                let matches = dismissalText.match(/b (.*)/);
-                                                bowler = matches[1];
-                                            } else if(dismissalText.match(/obs/)) {
-                                                dismissalMode = 'Obstructing the Field';
-                                            }
-
-                                            if (dismissalMode) {
-                                                battingScoreObject.dismissalMode = dismissalMode;
-
-                                                if (fielders) {
-                                                    fielders = fielders.replace(/\(sub\)/g, '');
-                                                    battingScoreObject.fielders = fielders;
+                                                } else if (dismissalText.match(/lbw b (.*)/)) {
+                                                    dismissalMode = 'LBW';
+                                                    let matches = dismissalText.match(/lbw b (.*)/);
+                                                    bowler = matches[1];
+                                                } else if(dismissalText.match(/run out (.*)/)) {
+                                                    dismissalMode = 'Run Out';
+                                                    let matches = dismissalText.match(/run out (.*)/);
+                                                    let fieldersText = matches[1].replace('(', '').replace(')', '');
+                                                    let fielderParts = fieldersText.split('/');
+                                                    fielders = fielderParts.join(', ');
+                                                } else if(dismissalText.match(/hit wicket b (.*)/)) {
+                                                    dismissalMode = 'Hit Wicket';
+                                                    let matches = dismissalText.match(/hit wicket b (.*)/);
+                                                    bowler = matches[1];
+                                                } else if(dismissalText.match(/handled the ball/)) {
+                                                    dismissalMode = 'Handled the Ball';
+                                                } else if(dismissalText.match(/retd hurt/)) {
+                                                    dismissalMode = 'Retired Hurt';
+                                                } else if(dismissalText.match(/st (.*) b (.*)/)) {
+                                                    dismissalMode = 'Stumped';
+                                                    let matches = dismissalText.match(/st (.*) b (.*)/);
+                                                    fielders = matches[1];
+                                                    bowler = matches[2];
+                                                } else if(dismissalText.match(/(c & b|c and b) (.*)/)) {
+                                                    dismissalMode = 'Caught';
+                                                    let matches = dismissalText.match(/(c & b|c and b) (.*)/);
+                                                    fielders = matches[2];
+                                                    bowler = matches[2];
+                                                } else if(dismissalText.match(/c (.*) b (.*)/)) {
+                                                    dismissalMode = 'Caught';
+                                                    let matches = dismissalText.match(/c (.*) b (.*)/);
+                                                    fielders = matches[1];
+                                                    bowler = matches[2];
+                                                } else if(dismissalText.match(/b (.*)/)) {
+                                                    dismissalMode = 'Bowled';
+                                                    let matches = dismissalText.match(/b (.*)/);
+                                                    bowler = matches[1];
+                                                } else if(dismissalText.match(/obs/)) {
+                                                    dismissalMode = 'Obstructing the Field';
                                                 }
 
-                                                if (bowler) {
-                                                    battingScoreObject.bowler = bowler;
+                                                if (dismissalMode) {
+                                                    battingScoreObject.dismissalMode = dismissalMode;
+
+                                                    if (fielders) {
+                                                        fielders = fielders.replace(/\(sub\)/g, '');
+                                                        battingScoreObject.fielders = fielders;
+                                                    }
+
+                                                    if (bowler) {
+                                                        battingScoreObject.bowler = bowler;
+                                                    }
                                                 }
+
+                                                let runsDiv = innerDivs[2];
+                                                battingScoreObject.runs = parseInt(runsDiv.innerText, 10);
+
+                                                let ballsDiv = innerDivs[3];
+                                                battingScoreObject.balls = parseInt(ballsDiv.innerText, 10);
+
+                                                let foursDiv = innerDivs[4];
+                                                battingScoreObject.fours = parseInt(foursDiv.innerText, 10);
+
+                                                let sixesDiv = innerDivs[5];
+                                                battingScoreObject.sixes = parseInt(sixesDiv.innerText, 10);
+
+                                                battingScoreObject.team = team;
                                             }
 
-                                            let runsDiv = innerDivs[2];
-                                            battingScoreObject.runs = parseInt(runsDiv.innerText, 10);
-
-                                            let ballsDiv = innerDivs[3];
-                                            battingScoreObject.balls = parseInt(ballsDiv.innerText, 10);
-
-                                            let foursDiv = innerDivs[4];
-                                            battingScoreObject.fours = parseInt(foursDiv.innerText, 10);
-
-                                            let sixesDiv = innerDivs[5];
-                                            battingScoreObject.sixes = parseInt(sixesDiv.innerText, 10);
-
-                                            battingScoreObject.team = team;
                                         }
 
-                                    }
-
-                                    if (Object.keys(battingScoreObject).length > 0) {
-                                        battingScores.push(battingScoreObject);
+                                        if (Object.keys(battingScoreObject).length > 0) {
+                                            battingScores.push(battingScoreObject);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
+                    details.battingScores = battingScores;
                 }
 
-                details.battingScores = battingScores;
+                if (bowlerDiv) {
+                    let bowlingFigures = [];
 
-                let bowlerDiv = divs[3];
-                let bowlingFigures = [];
+                    let bowlingFigureDivs = bowlerDiv.children;
+                    if (bowlingFigureDivs.length > 0) {
+                        for (let index in bowlingFigureDivs) {
+                            if (bowlingFigureDivs.hasOwnProperty(index)) {
+                                index = parseInt(index, 10);
 
-                let bowlingFigureDivs = bowlerDiv.children;
+                                //ignoring header
+                                if (index > 0) {
+                                    let bowlingFigure = {};
+                                    let mainDiv = bowlingFigureDivs[index];
+                                    let innerDivs = mainDiv.children;
 
-                if (bowlingFigureDivs.length > 0) {
-                    for (let index in bowlingFigureDivs) {
-                        if (bowlingFigureDivs.hasOwnProperty(index)) {
-                            index = parseInt(index, 10);
+                                    if (innerDivs.length > 0) {
+                                        let bowlerDiv = innerDivs[0];
 
-                            //ignoring header
-                            if (index > 0) {
-                                let bowlingFigure = {};
-                                let mainDiv = bowlingFigureDivs[index];
-                                let innerDivs = mainDiv.children;
+                                        let bowlerLink = bowlerDiv.querySelector('a');
+                                        const matches = bowlerLink.title.match(/View profile of (.*)/);
+                                        bowlingFigure.player = matches[1];
 
-                                if (innerDivs.length > 0) {
-                                    let bowlerDiv = innerDivs[0];
+                                        let ballsDiv = innerDivs[1];
+                                        let oversString = ballsDiv.innerText;
+                                        let overParts = oversString.split('.');
+                                        let balls = 0;
+                                        let overs = parseInt(overParts[0], 10);
+                                        if (overParts.length === 2) {
+                                            balls = parseInt(overParts[1],10);
+                                        }
+                                        balls += (overs * 6);
+                                        bowlingFigure.balls = balls;
 
-                                    let bowlerLink = bowlerDiv.querySelector('a');
-                                    const matches = bowlerLink.title.match(/View profile of (.*)/);
-                                    bowlingFigure.player = matches[1];
+                                        let maidensDiv = innerDivs[2];
+                                        bowlingFigure.maidens = parseInt(maidensDiv.innerText, 10);
 
-                                    let ballsDiv = innerDivs[1];
-                                    let oversString = ballsDiv.innerText;
-                                    let overParts = oversString.split('.');
-                                    let balls = 0;
-                                    let overs = parseInt(overParts[0], 10);
-                                    if (overParts.length === 2) {
-                                        balls = parseInt(overParts[1],10);
+                                        let runsDiv = innerDivs[3];
+                                        bowlingFigure.runs = parseInt(runsDiv.innerText, 10);
+
+                                        let wicketsDiv = innerDivs[4];
+                                        bowlingFigure.wickets = parseInt(wicketsDiv.innerText, 10);
+
+                                        bowlingFigures.push(bowlingFigure);
                                     }
-                                    balls += (overs * 6);
-                                    bowlingFigure.balls = balls;
-
-                                    let maidensDiv = innerDivs[2];
-                                    bowlingFigure.maidens = parseInt(maidensDiv.innerText, 10);
-
-                                    let runsDiv = innerDivs[3];
-                                    bowlingFigure.runs = parseInt(runsDiv.innerText, 10);
-
-                                    let wicketsDiv = innerDivs[4];
-                                    bowlingFigure.wickets = parseInt(wicketsDiv.innerText, 10);
-
-                                    bowlingFigures.push(bowlingFigure);
                                 }
                             }
                         }
                     }
-                }
 
-                details.bowlingFigures = bowlingFigures;
+                    details.bowlingFigures = bowlingFigures;
+                }
             }
 
         }
@@ -403,7 +418,7 @@ const getMatchDetailsFromHTML = () => {
                                 extrasObject.innings = innings;
                                 extrasObject.teamInnings = teamInnings;
                                 extrasObject.battingTeam = team;
-                                extrasObject.bowlingTeam = ((team == team1) ? team2 : team1);
+                                extrasObject.bowlingTeam = ((team === team1) ? team2 : team1);
                                 extras.push(extrasObject);
                             }
 
@@ -522,6 +537,7 @@ const getMatchDetails = async (matchUrl) => {
         waitUntil: 'networkidle2',
         timeout: 0
     });
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
     let details = await page.evaluate(getMatchDetailsFromHTML);
     await page.close();

@@ -74,13 +74,14 @@ if (process.argv.length >= 4) {
                                     }
                                     console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
 
-                                    if (!details[tour.name].series[gameType].matches.hasOwnProperty(match.name) || (Object.keys(details[tour.name].series[gameType].matches[match.name]).length === 0)) {
+                                    if (!details[tour.name].series[gameType].matches.hasOwnProperty(match.name) || details[tour.name].series[gameType].matches[match.name].hasOwnProperty('error')) {
                                         try {
                                             details[tour.name].series[gameType].matches[match.name] = await getMatchDetails(match.link);
                                         } catch (e) {
                                             console.log("\nError while getting match details. Exception: " + e + "\n");
                                             details[tour.name].series[gameType].matches[match.name] = {
-                                                error: e
+                                                error: e,
+                                                match
                                             };
                                         }
                                     }
