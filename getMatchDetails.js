@@ -116,7 +116,7 @@ const getMatchDetailsFromHTML = () => {
                                     } else if(dismissalText.match(/run out (.*)/)) {
                                         dismissalMode = 'Run Out';
                                         let matches = dismissalText.match(/run out (.*)/);
-                                        let fieldersText = matches[1].replace('(', '').replace(')', '');
+                                        let fieldersText = matches[1].replace(/\(sub\)/g, '').replace('(', '').replace(')', '');
                                         let fielderParts = fieldersText.split('/');
                                         fielders = fielderParts.join(', ');
                                     } else if(dismissalText.match(/hit wicket b (.*)/)) {
