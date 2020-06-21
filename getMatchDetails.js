@@ -88,7 +88,7 @@ const getMatchDetailsFromHTML = () => {
                                 details.extras = extras;
                             } else if (battingScoreDiv.innerText.indexOf('Total') !== -1) {
                                 // total div
-                            } else if (battingScoreDiv.innerText.indexOf('Did not Bat') !== -1) {
+                            } else if (battingScoreDiv.innerText.match(/Did not Bat|Yet to Bat/)) {
                                 // remaining batsman div
                             } else {
                                 let battingScoreObject = {};
