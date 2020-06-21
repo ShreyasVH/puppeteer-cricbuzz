@@ -4,9 +4,7 @@ const fs = require('fs');
 
 const getTourList = require('./getTourList.js').getTourList;
 
-const getTourDetails = require('./getTourDetails').getTourDetails;
-
-const getMatchDetails = require('./getMatchDetails').getMatchDetails;
+const getMatchesForTour = require('./getAllMatchDetailsForTour.js').getMatchesForTour;
 
 if (process.argv.length >= 4) {
     let start = parseInt(process.argv[2], 10);
@@ -38,70 +36,24 @@ if (process.argv.length >= 4) {
                         }
                         console.log("\n\tProcessing tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
 
+                        if (!details.hasOwnProperty(tour.name)) {
+                            details[tour.name] = {
+                                series: {}
+                            };
+                        }
+
                         try {
-                            let tourDetails = await getTourDetails(tour.link);
-                            if (!details.hasOwnProperty(tour.name)) {
-                                details[tour.name] = {
-                                    startTime: tourDetails.startTime,
-                                    endTime: tourDetails.endTime,
-                                    series: {}
-                                };
-                            }
-
-                            const seriesList = Object.keys(tourDetails.series);
-                            let seriesIndex = 1;
-                            for (const gameType of seriesList) {
-                                if (seriesIndex > 1) {
-                                    // break;
-                                    console.log("\n\t\t:::::::::::::::::::::::::::::::::::\n");
-                                }
-                                console.log("\n\t\tProcessing " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
-                                const series = tourDetails.series[gameType];
-                                if (!details[tour.name].series.hasOwnProperty(gameType)) {
-                                    details[tour.name].series[gameType] = {
-                                        startTime: series.startTime,
-                                        endTime: series.endTime,
-                                        matches: {}
-                                    };
-                                }
-
-                                const matchList = series.matches;
-                                let matchIndex = 1;
-                                for (const match of matchList) {
-                                    if (matchIndex > 1) {
-                                        // break;
-                                        console.log("\n\t\t\t.....................................\n");
-                                    }
-                                    console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
-
-                                    if (!details[tour.name].series[gameType].matches.hasOwnProperty(match.name) || details[tour.name].series[gameType].matches[match.name].hasOwnProperty('error')) {
-                                        try {
-                                            details[tour.name].series[gameType].matches[match.name] = await getMatchDetails(match.link);
-                                        } catch (e) {
-                                            console.log("\nError while getting match details. Exception: " + e + "\n");
-                                            details[tour.name].series[gameType].matches[match.name] = {
-                                                error: e,
-                                                match
-                                            };
-                                        }
-                                    }
-
-                                    fs.writeFile(fileName, JSON.stringify(details, null, ' '), error => {
-                                        if (error) {
-                                            console.log("\n\t\tError while writing card data. Error: " + error + "\n");
-                                        }
-                                    });
-
-                                    console.log("\n\t\t\tProcessed match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
-                                    matchIndex++;
-                                }
-
-                                console.log("\n\t\tProcessed " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]\n");
-                                seriesIndex++;
-                            }
+                            let tourDetails = await getMatchesForTour(tour.link, details[tour.name]);
+                            details[tour.name] = tourDetails;
                         } catch (e) {
                             console.log("\nError while getting tour details. Exception: " + e + "\n");
                         }
+
+                        fs.writeFile(fileName, JSON.stringify(details, null, ' '), error => {
+                            if (error) {
+                                console.log("\n\t\tError while writing card data. Error: " + error + "\n");
+                            }
+                        });
 
                         console.log("\n\tProcessed tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
                         tourIndex++;

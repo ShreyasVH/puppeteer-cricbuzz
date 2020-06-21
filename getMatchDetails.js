@@ -563,6 +563,7 @@ const getMatchDetails = async (matchUrl) => {
 
     if (details.players && details.players.length > 0) {
         for (let player of details.players) {
+            console.log("\n\t\t\t\tFetching details for player: " + player.player);
             try {
                 let playerURL = player.link;
                 let playerPage = await browser.newPage();
@@ -584,6 +585,7 @@ const getMatchDetails = async (matchUrl) => {
     if (details.bench && details.bench.length > 0) {
         try {
             for (let player of details.bench) {
+                console.log("\n\t\t\t\tFetching details for player: " + player.player);
                 let playerURL = player.link;
                 let playerPage = await browser.newPage();
                 await playerPage.goto(playerURL, {
