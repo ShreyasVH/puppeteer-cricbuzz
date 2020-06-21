@@ -18,8 +18,6 @@ const getMatchDetailsFromHTML = () => {
         p: 'PENALTY'
     };
 
-    // const dismissals
-
     const getInningsDetails = inning => {
         let details = {};
 
@@ -250,6 +248,15 @@ const getMatchDetailsFromHTML = () => {
     try {
         let team1;
         let team2;
+        const matchNameElement = document.querySelector('h1[itemprop="name"]');
+        if (matchNameElement) {
+            let matches = matchNameElement.innerText.match(/(.*) vs (.*), (.*) - Live Cricket Score, Commentary/)
+            team1 = matches[1];
+            team2 = matches[2];
+        }
+        details.team1 = team1;
+        details.team2 = team2;
+
         let players = [];
         let bench = [];
         let teamsElements = document.querySelectorAll('.cb-minfo-tm-nm');
@@ -257,18 +264,6 @@ const getMatchDetailsFromHTML = () => {
             for (let index in teamsElements) {
                 index = parseInt(index, 10);
                 let teamElement = teamsElements[index];
-
-                if (index === 0) {
-                    let text = teamElement.innerText;
-                    team1 = text.replace('Squad', '').trim();
-                    details.team1 = team1;
-                }
-
-                if (index === 3) {
-                    let text = teamElement.innerText;
-                    team2 = text.replace('Squad', '').trim();
-                    details.team2 = team2;
-                }
 
                 if (index === 1) {
                     const divs = teamElement.querySelectorAll('div');
