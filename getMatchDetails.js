@@ -561,44 +561,44 @@ const getMatchDetails = async (matchUrl) => {
         console.log("\nError while getting stadium details. Exception: " + e + "\n");
     }
 
-    // if (details.players && details.players.length > 0) {
-    //     for (let player of details.players) {
-    //         try {
-    //             let playerURL = player.link;
-    //             let playerPage = await browser.newPage();
-    //             await playerPage.goto(playerURL, {
-    //                 waitUntil: 'networkidle2',
-    //                 timeout: 0
-    //             });
-    //             const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
-    //             if (playerDetails.country) {
-    //                 player.country = playerDetails.country;
-    //             }
-    //         } catch (e) {
-    //             console.log("\nError while getting player details. Player: " + player.name + ". Error: " + e + "\n");
-    //         }
-    //
-    //     }
-    // }
-    //
-    // if (details.bench && details.bench.length > 0) {
-    //     try {
-    //         for (let player of details.bench) {
-    //             let playerURL = player.link;
-    //             let playerPage = await browser.newPage();
-    //             await playerPage.goto(playerURL, {
-    //                 waitUntil: 'networkidle2',
-    //                 timeout: 0
-    //             });
-    //             const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
-    //             if (playerDetails.country) {
-    //                 player.country = playerDetails.country;
-    //             }
-    //         }
-    //     } catch (e) {
-    //         console.log("\nError while getting player details. Player: " + player.name + ". Error: " + e + "\n");
-    //     }
-    // }
+    if (details.players && details.players.length > 0) {
+        for (let player of details.players) {
+            try {
+                let playerURL = player.link;
+                let playerPage = await browser.newPage();
+                await playerPage.goto(playerURL, {
+                    waitUntil: 'networkidle2',
+                    timeout: 0
+                });
+                const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
+                if (playerDetails.country) {
+                    player.country = playerDetails.country;
+                }
+            } catch (e) {
+                console.log("\nError while getting player details. Player: " + player.name + ". Error: " + e + "\n");
+            }
+
+        }
+    }
+
+    if (details.bench && details.bench.length > 0) {
+        try {
+            for (let player of details.bench) {
+                let playerURL = player.link;
+                let playerPage = await browser.newPage();
+                await playerPage.goto(playerURL, {
+                    waitUntil: 'networkidle2',
+                    timeout: 0
+                });
+                const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
+                if (playerDetails.country) {
+                    player.country = playerDetails.country;
+                }
+            }
+        } catch (e) {
+            console.log("\nError while getting player details. Player: " + player.name + ". Error: " + e + "\n");
+        }
+    }
 
     await browser.close();
     return details;
