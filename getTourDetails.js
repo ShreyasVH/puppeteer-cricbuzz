@@ -12,7 +12,7 @@ const fileName = fileNameParts[fileNameParts.length - 1];
 
 const getTourDetailsFromHTML = () => {
     const getGameType = (matchName, tourName) => {
-        let gameType = '';
+        let gameType = 'ODI';
 
         let matches = matchName.match(/(.*) vs (.*), (.*)/);
         const gameTypeText = matches[3];
