@@ -16,17 +16,19 @@ if (process.argv.length >= 4) {
         (async() => {
             for (let year = start; year <= end; year++) {
                 let details = {};
-                let fileName = 'data/yearWiseDetails/' + year + '.json';
-                if (fs.existsSync(fileName)) {
-                    details = JSON.parse(fs.readFileSync(fileName));
-                }
                 if (year > start) {
                     console.log("\n.........................................\n");
                 }
                 console.log("\nProcessing year - " + year + "\n");
 
                 try {
-                    let tourList = await getTourList(year);
+                    let tourList = [];
+                    const tourListFilePath = 'data/yearWiseDetails/' + year + '/tourList.json';
+                    if (fs.existsSync(tourListFilePath)) {
+                        tourList = JSON.parse(fs.readFileSync(tourListFilePath));
+                    } else {
+                        tourList = await getTourList(year);
+                    }
 
                     let tourIndex = 1;
                     for (const tour of tourList) {
@@ -36,24 +38,11 @@ if (process.argv.length >= 4) {
                         }
                         console.log("\n\tProcessing tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
 
-                        if (!details.hasOwnProperty(tour.name)) {
-                            details[tour.name] = {
-                                series: {}
-                            };
-                        }
-
                         try {
-                            let tourDetails = await getMatchesForTour(tour.link, details[tour.name]);
-                            details[tour.name] = tourDetails;
+                            await getMatchesForTour(tour.link, year, tour.name);
                         } catch (e) {
                             console.log("\nError while getting tour details. Exception: " + e + "\n");
                         }
-
-                        fs.writeFile(fileName, JSON.stringify(details, null, ' '), error => {
-                            if (error) {
-                                console.log("\n\t\tError while writing card data. Error: " + error + "\n");
-                            }
-                        });
 
                         console.log("\n\tProcessed tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
                         tourIndex++;

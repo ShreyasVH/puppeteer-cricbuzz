@@ -10,6 +10,26 @@ const fileNameParts = process.argv[1].split('\/');
 const fileName = fileNameParts[fileNameParts.length - 1];
 
 const getMatchDetailsFromHTML = () => {
+    const getGameType = (matchName, tourName) => {
+        let gameType = 'ODI';
+
+        let matches = matchName.match(/(.*) vs (.*), (.*)/);
+        const gameTypeText = matches[3];
+        if (tourName.match('T20')) {
+            gameType = 'T20';
+        } else if (gameTypeText.match('ODI')) {
+            gameType = 'ODI';
+        } else if (gameTypeText.match('Test')) {
+            gameType = 'TEST';
+        } else if (gameTypeText.match('T20')) {
+            gameType = 'T20';
+        } else if (gameType.match(/match|Match/)) {
+            gameType = 'ODI';
+        }
+
+        return gameType;
+    };
+
     const extrasMapping = {
         b: 'BYE',
         lb: 'LEG_BYE',
@@ -248,14 +268,35 @@ const getMatchDetailsFromHTML = () => {
     try {
         let team1;
         let team2;
+        let matchName;
+        let tourName;
+        let gameType;
+        let year;
+
+        const tourNameElement = document.querySelector('.cb-nav-subhdr a span');
+        if (tourNameElement) {
+            tourName = tourNameElement.innerText;
+
+            const matches = tourName.match(/(.*) ([0-9]{4})(-[0-9]{2})?/);
+            year = matches[2];
+        }
+
         const matchNameElement = document.querySelector('h1[itemprop="name"]');
         if (matchNameElement) {
             let matches = matchNameElement.innerText.match(/(.*) vs (.*), (.*) - Live Cricket Score, Commentary/)
             team1 = matches[1];
             team2 = matches[2];
+
+            matchName = matchNameElement.innerText.replace(' - Live Cricket Score, Commentary', '');
+
+            gameType = getGameType(matchName, tourName);
         }
         details.team1 = team1;
         details.team2 = team2;
+        details.name = matchName;
+        details.tourName = tourName;
+        details.gameType = gameType;
+        details.year = year;
 
         let players = [];
         let bench = [];
@@ -480,7 +521,6 @@ const getMatchDetailsFromHTML = () => {
         details.stadiumURL = stadiumElement.href;
 
     } catch(e) {
-        debugger;
         console.log("Error: " + e);
     }
 
@@ -549,21 +589,66 @@ const getMatchDetails = async (matchUrl) => {
         console.log("\nError while getting MOTM details. Exception: " + e + "\n");
     }
 
-    try {
-        let stadiumUrl = details.stadiumURL;
-        let stadiumPage = await browser.newPage();
-        await stadiumPage.goto(stadiumUrl, {
-            waitUntil: 'networkidle2',
-            timeout: 0
-        });
-        details.stadium = await stadiumPage.evaluate(getStadiumDetails);
-    } catch (e) {
-        console.log("\nError while getting stadium details. Exception: " + e + "\n");
+    let stadiumCache = {};
+    const stadiumCacheFilePath = 'data/yearWiseDetails/stadiumCache.json';
+    if (fs.existsSync(stadiumCacheFilePath)) {
+        stadiumCache = JSON.parse(fs.readFileSync(stadiumCacheFilePath));
     }
 
+    let stadiumUrl = details.stadiumURL;
+    let stadiumDetails = {};
+    if (stadiumUrl) {
+        if (stadiumCache.hasOwnProperty(stadiumUrl)) {
+            stadiumDetails = stadiumCache[stadiumUrl];
+            console.log("\nGot stadium details from cache\n");
+        } else {
+            try {
+
+                let stadiumPage = await browser.newPage();
+                await stadiumPage.goto(stadiumUrl, {
+                    waitUntil: 'networkidle2',
+                    timeout: 0
+                });
+                stadiumDetails = await stadiumPage.evaluate(getStadiumDetails);
+                stadiumCache[stadiumUrl] = stadiumDetails;
+            } catch (e) {
+                console.log("\nError while getting stadium details. Exception: " + e + "\n");
+            }
+        }
+
+        details.stadium = stadiumDetails;
+        fs.writeFile(stadiumCacheFilePath, JSON.stringify(stadiumCache, null, ' '), error => {
+            if (error) {
+                console.log("\n\t\tError while writing stadium cache. Error: " + error + "\n");
+            }
+        });
+    }
+
+
+    let players = [];
+
     if (details.players && details.players.length > 0) {
-        for (let player of details.players) {
-            console.log("\n\t\t\t\tFetching details for player: " + player.player);
+        players = players.concat(details.players);
+    }
+
+    if (details.bench && details.bench.length > 0) {
+      players = players.concat(details.bench);
+    }
+
+    let playerCache = {};
+    const playerCacheFilePath = 'data/yearWiseDetails/playerCache.json';
+    if (fs.existsSync(playerCacheFilePath)) {
+        playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
+    }
+
+    for (let player of players) {
+        console.log("\n\t\t\t\tFetching details for player: " + player.player);
+        let playerDetails;
+        if (playerCache.hasOwnProperty(player.link)) {
+            playerDetails = {
+                country: playerCache[player.link]
+            };
+        } else {
             try {
                 let playerURL = player.link;
                 let playerPage = await browser.newPage();
@@ -571,35 +656,58 @@ const getMatchDetails = async (matchUrl) => {
                     waitUntil: 'networkidle2',
                     timeout: 0
                 });
-                const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
-                if (playerDetails.country) {
-                    player.country = playerDetails.country;
-                }
+                playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
             } catch (e) {
                 console.log("\nError while getting player details. Player: " + player.name + ". Error: " + e + "\n");
             }
+        }
 
+        if (playerDetails.country) {
+            player.country = playerDetails.country;
+            playerCache[player.link] = playerDetails.country;
         }
     }
 
-    if (details.bench && details.bench.length > 0) {
-        try {
-            for (let player of details.bench) {
-                console.log("\n\t\t\t\tFetching details for player: " + player.player);
-                let playerURL = player.link;
-                let playerPage = await browser.newPage();
-                await playerPage.goto(playerURL, {
-                    waitUntil: 'networkidle2',
-                    timeout: 0
-                });
-                const playerDetails = await playerPage.evaluate(getPlayerDetailsFromHTML);
-                if (playerDetails.country) {
-                    player.country = playerDetails.country;
-                }
+    try {
+        fs.writeFile(playerCacheFilePath, JSON.stringify(playerCache, null, ' '), error => {
+            if (error) {
+                console.log("\n\t\tError while writing player cache. Error: " + error + "\n");
             }
-        } catch (e) {
-            console.log("\nError while getting player details. Player: " + player.name + ". Error: " + e + "\n");
+        });
+
+        const yearFilePath = 'data/yearWiseDetails/' + details.year;
+        if (!fs.existsSync(yearFilePath)) {
+            fs.mkdirSync(yearFilePath);
         }
+
+        const toursFolderPath = yearFilePath + '/tours';
+        if (!fs.existsSync(toursFolderPath)) {
+            fs.mkdirSync(toursFolderPath);
+        }
+
+        const tourFilePath = toursFolderPath + '/' + details.tourName;
+        if (!fs.existsSync(tourFilePath)) {
+            fs.mkdirSync(tourFilePath);
+        }
+
+        const seriesFolderPath = tourFilePath + '/series';
+        if (!fs.existsSync(seriesFolderPath)) {
+            fs.mkdirSync(seriesFolderPath);
+        }
+
+        const gameTypeFilePath = seriesFolderPath + '/' + details.gameType;
+        if (!fs.existsSync(gameTypeFilePath)) {
+            fs.mkdirSync(gameTypeFilePath);
+        }
+
+        const matchFilePath = gameTypeFilePath + '/' + details.name.toLowerCase() + '.json';
+        fs.writeFile(matchFilePath, JSON.stringify(details, null, '  '), error => {
+            if (error) {
+                console.log("\n\t\tError while writing match data. Error: " + error + "\n");
+            }
+        });
+    } catch (e) {
+        console.log("\nError while writing files. Error: " + e + "\n");
     }
 
     await browser.close();

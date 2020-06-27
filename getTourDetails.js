@@ -61,6 +61,9 @@ const getTourDetailsFromHTML = () => {
         if (null !== tourNameElement) {
             tourName = tourNameElement.innerText;
             details.name = tourName;
+
+            const matches = tourName.match(/(.*) ([0-9]{4})(-[0-9]{2})?/);
+            details.year = matches[2];
         }
 
         const matchElements = document.querySelectorAll('.cb-col-100.cb-col.cb-series-matches.ng-scope');
@@ -124,7 +127,7 @@ const getTourDetailsFromHTML = () => {
 };
 
 const getTourDetails = async (tourUrl) => {
-    let tourDetails = [];
+    let details = {};
 
     const browser  = await puppeteer.launch({
         headless: true,
@@ -142,15 +145,36 @@ const getTourDetails = async (tourUrl) => {
             timeout: 0
         });
 
-        tourDetails = await page.evaluate(getTourDetailsFromHTML);
+        details = await page.evaluate(getTourDetailsFromHTML);
         await page.close();
+
+        try {
+            const yearFilePath = 'data/yearWiseDetails/' + details.year;
+            if (!fs.existsSync(yearFilePath)) {
+                fs.mkdirSync(yearFilePath);
+            }
+
+            const toursFolderPath = yearFilePath + '/tours';
+            if (!fs.existsSync(toursFolderPath)) {
+                fs.mkdirSync(toursFolderPath);
+            }
+
+            const tourDetailsFilePath = toursFolderPath + '/' + details.name + '/details.json';
+            fs.writeFile(tourDetailsFilePath, JSON.stringify(details, null, '  '), error => {
+                if (error) {
+                    console.log("\n\t\tError while writing tour details data. Error: " + error + "\n");
+                }
+            });
+        } catch (e) {
+            console.log("\nError while writing files. Error: " + e + "\n");
+        }
 
         await browser.close();
 
     } catch (e) {
         console.log(e);
     }
-    return tourDetails;
+    return details;
 };
 exports.getTourDetails = getTourDetails;
 
@@ -158,14 +182,7 @@ if (fileName === scriptName) {
     (async() => {
         const tourUrl = process.argv[2];
 
-        const tourDetails = await getTourDetails(tourUrl);
-        console.log(JSON.stringify(tourDetails, null, ' '));
-
-        fs.writeFile('data/tourDetails.json', JSON.stringify(tourDetails, null, ' '), error => {
-            if (error) {
-                console.log("\n\t\tError while writing card data. Error: " + error + "\n");
-            }
-        });
+        await getTourDetails(tourUrl);
     })();
 }
 

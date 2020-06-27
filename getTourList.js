@@ -55,6 +55,21 @@ const getTourList = async year => {
         });
 
         let tourList = await page.evaluate(getTourListFromHTML);
+        try {
+            const yearFilePath = 'data/yearWiseDetails/' + year;
+            if (!fs.existsSync(yearFilePath)) {
+                fs.mkdirSync(yearFilePath);
+            }
+
+            const tourListFilePath = yearFilePath + '/tourList.json';
+            fs.writeFile(tourListFilePath, JSON.stringify(tourList, null, '  '), error => {
+                if (error) {
+                    console.log("\n\t\tError while writing tour list data. Error: " + error + "\n");
+                }
+            });
+        } catch (e) {
+            console.log("\nError while writing files. Error: " + e + "\n");
+        }
 
         await page.close();
 
