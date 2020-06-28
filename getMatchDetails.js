@@ -283,10 +283,15 @@ const getMatchDetailsFromHTML = () => {
 
         const matchNameElement = document.querySelector('h1[itemprop="name"]');
         if (matchNameElement) {
-            let matches = matchNameElement.innerText.match(/(.*) vs (.*), (.*) - Live Cricket Score, Commentary/)
+            let matches;
+            if (matchNameElement.innerText.match(/(.*) vs (.*), (.*), (Group|Pool) (.*) - Live Cricket Score, Commentary/)) {
+                matches = matchNameElement.innerText.match(/(.*) vs (.*), (.*), (Group|Pool) (.*) - Live Cricket Score, Commentary/);
+            } else {
+                matches = matchNameElement.innerText.match(/(.*) vs (.*), (.*) - Live Cricket Score, Commentary/);
+            }
             team1 = matches[1];
             team2 = matches[2];
-
+            console.log(team2);
             matchName = matchNameElement.innerText.replace(' - Live Cricket Score, Commentary', '');
 
             gameType = getGameType(matchName, tourName);

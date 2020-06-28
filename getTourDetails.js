@@ -159,7 +159,12 @@ const getTourDetails = async (tourUrl) => {
                 fs.mkdirSync(toursFolderPath);
             }
 
-            const tourDetailsFilePath = toursFolderPath + '/' + details.name + '/details.json';
+            const tourFilePath = toursFolderPath + '/' + details.name;
+            if (!fs.existsSync(tourFilePath)) {
+                fs.mkdirSync(tourFilePath);
+            }
+
+            const tourDetailsFilePath = tourFilePath + '/details.json';
             fs.writeFile(tourDetailsFilePath, JSON.stringify(details, null, '  '), error => {
                 if (error) {
                     console.log("\n\t\tError while writing tour details data. Error: " + error + "\n");
