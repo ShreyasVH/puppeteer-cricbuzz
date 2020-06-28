@@ -291,7 +291,6 @@ const getMatchDetailsFromHTML = () => {
             }
             team1 = matches[1];
             team2 = matches[2];
-            console.log(team2);
             matchName = matchNameElement.innerText.replace(' - Live Cricket Score, Commentary', '');
 
             gameType = getGameType(matchName, tourName);
