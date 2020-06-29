@@ -14,8 +14,9 @@ const getMatchDetailsFromHTML = () => {
         let gameType = 'ODI';
 
         let matches = matchName.match(/(.*) vs (.*), (.*)/);
-        const gameTypeText = matches[3];
-        if (tourName.match('T20')) {
+        const matchNameParts = matchName.split(', ');
+        const gameTypeText = matchNameParts[1];
+        if (tourName.match(/T20|Twenty20/)) {
             gameType = 'T20';
         } else if (gameTypeText.match('ODI')) {
             gameType = 'ODI';
@@ -283,15 +284,14 @@ const getMatchDetailsFromHTML = () => {
 
         const matchNameElement = document.querySelector('h1[itemprop="name"]');
         if (matchNameElement) {
-            let matches;
-            if (matchNameElement.innerText.match(/(.*) vs (.*), (.*), (Group|Pool) (.*) - Live Cricket Score, Commentary/)) {
-                matches = matchNameElement.innerText.match(/(.*) vs (.*), (.*), (Group|Pool) (.*) - Live Cricket Score, Commentary/);
-            } else {
-                matches = matchNameElement.innerText.match(/(.*) vs (.*), (.*) - Live Cricket Score, Commentary/);
-            }
+            let matchFullName = matchNameElement.innerText.replace(' - Live Cricket Score, Commentary', '');
+            const matchNameParts = matchFullName.split(', ');
+            const teamsText = matchNameParts[0];
+            const matches = teamsText.match(/(.*) vs (.*)/);
+
             team1 = matches[1];
             team2 = matches[2];
-            matchName = matchNameElement.innerText.replace(' - Live Cricket Score, Commentary', '');
+            matchName = teamsText + ', ' + matchNameParts[1];
 
             gameType = getGameType(matchName, tourName);
         }

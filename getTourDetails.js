@@ -15,8 +15,9 @@ const getTourDetailsFromHTML = () => {
         let gameType = 'ODI';
 
         let matches = matchName.match(/(.*) vs (.*), (.*)/);
-        const gameTypeText = matches[3];
-        if (tourName.match('T20')) {
+        const matchNameParts = matchName.split(', ');
+        const gameTypeText = matchNameParts[1];
+        if (tourName.match(/T20|Twenty20/)) {
             gameType = 'T20';
         } else if (gameTypeText.match('ODI')) {
             gameType = 'ODI';
@@ -76,7 +77,7 @@ const getTourDetailsFromHTML = () => {
             const matchNameElement = matchNameDiv.querySelector('a');
             const matchNameSpan = matchNameElement.querySelector('span');
             const matchName = matchNameSpan.innerText;
-            if (!matchName.match(/Practice|practice/)) {
+            if (!matchName.match(/Practice|practice|warm/)) {
                 const gameType = getGameType(matchName, tourName);
 
                 if (!series.hasOwnProperty(gameType)) {
