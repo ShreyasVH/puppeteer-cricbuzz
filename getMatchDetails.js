@@ -321,7 +321,7 @@ const getMatchDetailsFromHTML = () => {
                         const name = matches[1];
 
                         let player = {
-                            player: name,
+                            player: name.trim(),
                             team: team1,
                             link: playerElement.href
                         };
@@ -340,7 +340,7 @@ const getMatchDetailsFromHTML = () => {
                         const name = matches[1];
 
                         let player = {
-                            player: name,
+                            player: name.trim(),
                             team: team1,
                             link: playerElement.href
                         };
@@ -359,7 +359,7 @@ const getMatchDetailsFromHTML = () => {
                         const name = matches[1];
 
                         let player = {
-                            player: name,
+                            player: name.trim(),
                             team: team2,
                             link: playerElement.href
                         };
@@ -378,7 +378,7 @@ const getMatchDetailsFromHTML = () => {
                         const name = matches[1];
 
                         let player = {
-                            player: name,
+                            player: name.trim(),
                             team: team2,
                             link: playerElement.href
                         };
@@ -477,7 +477,9 @@ const getMatchDetailsFromHTML = () => {
         }
 
         const resultElement = document.querySelector('.cb-scrcrd-status');
-        const resultText = resultElement.innerText;
+        let resultText = resultElement.innerText;
+        const resultTextParts = resultText.split(' - ');
+        resultText = resultTextParts[resultTextParts.length - 1];
         if (resultText.indexOf(' won ') !== -1) {
             if (resultText.match(/super|Super/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
@@ -604,7 +606,6 @@ const getMatchDetails = async (matchUrl) => {
     if (stadiumUrl) {
         if (stadiumCache.hasOwnProperty(stadiumUrl)) {
             stadiumDetails = stadiumCache[stadiumUrl];
-            console.log("\nGot stadium details from cache\n");
         } else {
             try {
 
