@@ -39,6 +39,51 @@ const getMatchDetailsFromHTML = () => {
         p: 'PENALTY'
     };
 
+    const correctTeam = (team) => {
+        let output = team;
+        const teamMapping = {
+            qat: 'Qatar',
+            uga: 'Uganda',
+            mly: 'Malaysia',
+            hk: 'Hong Kong',
+            ger: 'Germany',
+            sin: 'Singapore',
+            thai: 'Thailand',
+            nep: 'Nepal',
+            mdv: 'Maldives',
+            uae: 'United Arab Emirates',
+            irn: 'Iran',
+            bhr: 'Bahrain',
+            sau: 'Saudi Arabia',
+            kuw: 'Kuwait',
+            oman: 'Oman',
+            bel: 'Belgium',
+            bw: 'Botswana',
+            nam: 'Namibia',
+            windies: 'West Indies',
+            den: 'Denmark',
+            fin: 'Finland',
+            ita: 'Italy',
+            png: 'Papua New Guinea',
+            sco: 'Scotland',
+            gib: 'Gibraltar',
+            port: 'Portugal',
+            jer: 'Jersey',
+            ggy: 'Guernsey',
+            ire: 'Ireland',
+            ned: 'Netherlands',
+            estxi: 'Estonia XI',
+            'United States of America': 'United States',
+            van: 'Vanuatu'
+        };
+
+        if (teamMapping.hasOwnProperty(team.toLowerCase())) {
+            output = teamMapping[team.toLowerCase()];
+        }
+
+        return output;
+    };
+
     const getInningsDetails = inning => {
         let details = {};
 
@@ -76,6 +121,7 @@ const getMatchDetailsFromHTML = () => {
                                         let inningsText = inningsTextSpan.innerText;
                                         let matches = inningsText.match(/(.*) Innings/);
                                         team = matches[1];
+                                        team = correctTeam(team);
 
                                         if (team.match(/1st/)) {
                                             team = team.replace(' 1st', '');
@@ -120,7 +166,7 @@ const getMatchDetailsFromHTML = () => {
                                     let batsmanLink = batsmanDiv.querySelector('a');
                                     if (batsmanLink) {
                                         const matches = batsmanLink.title.match(/View profile of (.*)/);
-                                        battingScoreObject.player = matches[1];
+                                        battingScoreObject.player = matches[1].trim();
                                     }
 
                                     const dismissalDiv = innerDivs[1];
@@ -176,11 +222,11 @@ const getMatchDetailsFromHTML = () => {
 
                                         if (fielders) {
                                             fielders = fielders.replace(/\(sub\)/g, '');
-                                            battingScoreObject.fielders = fielders;
+                                            battingScoreObject.fielders = fielders.trim();
                                         }
 
                                         if (bowler) {
-                                            battingScoreObject.bowler = bowler;
+                                            battingScoreObject.bowler = bowler.trim();
                                         }
                                     }
 
@@ -228,7 +274,7 @@ const getMatchDetailsFromHTML = () => {
 
                                     let bowlerLink = bowlerDiv.querySelector('a');
                                     const matches = bowlerLink.title.match(/View profile of (.*)/);
-                                    bowlingFigure.player = matches[1];
+                                    bowlingFigure.player = matches[1].trim();
 
                                     let ballsDiv = innerDivs[1];
                                     let oversString = ballsDiv.innerText;
@@ -404,7 +450,7 @@ const getMatchDetailsFromHTML = () => {
                     details.tossWinner = tossWinner;
                     let batFirst = tossWinner;
                     if (decision === 'bowl') {
-                        if (team1 === tossWinner) {
+                        if (team1.toLowerCase() === tossWinner.toLowerCase()) {
                             batFirst = team2;
                         } else {
                             batFirst = team1;
@@ -437,7 +483,7 @@ const getMatchDetailsFromHTML = () => {
                             let inningsBattingScores = inningsObject.battingScores;
                             for (const battingScore of inningsBattingScores) {
                                 team = battingScore.team;
-                                teamInnings = ((team1 === team) ? team1Innings : team2Innings);
+                                teamInnings = ((team1.toLowerCase() === team.toLowerCase()) ? team1Innings : team2Innings);
                                 battingScore.teamInnings = teamInnings;
                                 battingScore.innings = innings;
                                 battingScores.push(battingScore);
@@ -455,14 +501,13 @@ const getMatchDetailsFromHTML = () => {
                                 extrasObject.innings = innings;
                                 extrasObject.teamInnings = teamInnings;
                                 extrasObject.battingTeam = team;
-                                // console.log("################ team: " + team);
-                                extrasObject.bowlingTeam = ((team === team1) ? team2 : team1);
+                                extrasObject.bowlingTeam = ((team.toLowerCase() === team1.toLowerCase()) ? team2 : team1);
                                 extras.push(extrasObject);
                             }
 
-                            if (team1 === team) {
+                            if (team1.toLowerCase() === team.toLowerCase()) {
                                 team1Innings++;
-                            } else if (team2 === team) {
+                            } else if (team2.toLowerCase() === team.toLowerCase()) {
                                 team2Innings++;
                             }
                             team = '';
@@ -481,7 +526,7 @@ const getMatchDetailsFromHTML = () => {
         const resultTextParts = resultText.split(' - ');
         resultText = resultTextParts[resultTextParts.length - 1];
         if (resultText.indexOf(' won ') !== -1) {
-            if (resultText.match(/super|Super/)) {
+            if (resultText.match(/super|Super|eliminator/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
                 let winner = matches[1];
                 details.winner = winner;
