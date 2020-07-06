@@ -9,7 +9,7 @@ const scriptName = path.basename(__filename);
 const fileNameParts = process.argv[1].split('\/');
 const fileName = fileNameParts[fileNameParts.length - 1];
 
-const getMatchDetailsFromHTML = () => {
+const getMatchDetailsFromHTML = (teamReplacements) => {
     const getGameType = (matchName, tourName) => {
         let gameType = 'ODI';
 
@@ -41,45 +41,9 @@ const getMatchDetailsFromHTML = () => {
 
     const correctTeam = (team) => {
         let output = team;
-        const teamMapping = {
-            qat: 'Qatar',
-            uga: 'Uganda',
-            mly: 'Malaysia',
-            hk: 'Hong Kong',
-            ger: 'Germany',
-            sin: 'Singapore',
-            thai: 'Thailand',
-            nep: 'Nepal',
-            mdv: 'Maldives',
-            uae: 'United Arab Emirates',
-            irn: 'Iran',
-            bhr: 'Bahrain',
-            sau: 'Saudi Arabia',
-            kuw: 'Kuwait',
-            oman: 'Oman',
-            bel: 'Belgium',
-            bw: 'Botswana',
-            nam: 'Namibia',
-            windies: 'West Indies',
-            den: 'Denmark',
-            fin: 'Finland',
-            ita: 'Italy',
-            png: 'Papua New Guinea',
-            sco: 'Scotland',
-            gib: 'Gibraltar',
-            port: 'Portugal',
-            jer: 'Jersey',
-            ggy: 'Guernsey',
-            ire: 'Ireland',
-            ned: 'Netherlands',
-            estxi: 'Estonia XI',
-            'united states of america': 'United States',
-            van: 'Vanuatu',
-            zim: 'Zimbabwe'
-        };
 
-        if (teamMapping.hasOwnProperty(team.toLowerCase())) {
-            output = teamMapping[team.toLowerCase()];
+        if (teamReplacements.hasOwnProperty(team.toLowerCase())) {
+            output = teamReplacements[team.toLowerCase()];
         }
 
         return output;
@@ -624,7 +588,13 @@ const getMatchDetails = async (matchUrl) => {
     });
     page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-    let details = await page.evaluate(getMatchDetailsFromHTML);
+    let teamReplacements = {};
+    const teamReplacementsFilePath = 'data/teamReplacements.json';
+    if (fs.existsSync(teamReplacementsFilePath)) {
+        teamReplacements = JSON.parse(fs.readFileSync(teamReplacementsFilePath));
+    }
+
+    let details = await page.evaluate(getMatchDetailsFromHTML, teamReplacements);
     await page.close();
 
     try {
