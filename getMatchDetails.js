@@ -73,8 +73,9 @@ const getMatchDetailsFromHTML = () => {
             ire: 'Ireland',
             ned: 'Netherlands',
             estxi: 'Estonia XI',
-            'United States of America': 'United States',
-            van: 'Vanuatu'
+            'united states of america': 'United States',
+            van: 'Vanuatu',
+            zim: 'Zimbabwe'
         };
 
         if (teamMapping.hasOwnProperty(team.toLowerCase())) {
@@ -121,13 +122,13 @@ const getMatchDetailsFromHTML = () => {
                                         let inningsText = inningsTextSpan.innerText;
                                         let matches = inningsText.match(/(.*) Innings/);
                                         team = matches[1];
-                                        team = correctTeam(team);
 
                                         if (team.match(/1st/)) {
                                             team = team.replace(' 1st', '');
                                         } else if (team.match(/2nd/)) {
                                             team = team.replace(' 2nd', '');
                                         }
+                                        team = correctTeam(team);
                                     }
                                 }
                             } else if (battingScoreDiv.innerText.indexOf('Batsman') !== -1) {
@@ -335,8 +336,8 @@ const getMatchDetailsFromHTML = () => {
             const teamsText = matchNameParts[0];
             const matches = teamsText.match(/(.*) vs (.*)/);
 
-            team1 = matches[1];
-            team2 = matches[2];
+            team1 = correctTeam(matches[1]);
+            team2 = correctTeam(matches[2]);
             matchName = teamsText + ', ' + matchNameParts[1];
 
             gameType = getGameType(matchName, tourName);
@@ -445,7 +446,7 @@ const getMatchDetailsFromHTML = () => {
             if (fieldName === 'Toss') {
                 if (fieldValue.indexOf(' won the toss ') !== -1) {
                     let matches = fieldValue.match(/(.*) won the toss and opt to (.*)/);
-                    let tossWinner = matches[1];
+                    let tossWinner = correctTeam(matches[1]);
                     let decision = matches[2];
                     details.tossWinner = tossWinner;
                     let batFirst = tossWinner;
@@ -528,17 +529,17 @@ const getMatchDetailsFromHTML = () => {
         if (resultText.indexOf(' won ') !== -1) {
             if (resultText.match(/super|Super|eliminator/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
-                let winner = matches[1];
+                let winner = correctTeam(matches[1]);
                 details.winner = winner;
                 details.result = 'SUPER_OVER';
             } else if (resultText.match(/bowl|Bowl/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
-                let winner = matches[1];
+                let winner = correctTeam(matches[1]);
                 details.winner = winner;
                 details.result = 'BOWL_OUT';
             } else {
                 let matches = resultText.match(/(.*) won by([a-zA-Z ]*)([0-9]+) ([a-zA-Z]+)/);
-                const winner = matches[1];
+                const winner = correctTeam(matches[1]);
                 const winMargin = matches[3];
                 const winMarginTypeText = matches[4];
 
