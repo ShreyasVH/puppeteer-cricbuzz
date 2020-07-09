@@ -58,13 +58,11 @@ const getTourDetailsFromHTML = () => {
         let startTime = null;
         let endTime = null;
         let tourName = '';
+        let year = null;
         const tourNameElement = document.querySelector('.cb-nav-hdr.cb-font-24.line-ht30');
         if (null !== tourNameElement) {
             tourName = tourNameElement.innerText;
             details.name = tourName;
-
-            const matches = tourName.match(/(.*) ([0-9]{4})(-[0-9]{2})?/);
-            details.year = matches[2];
         }
 
         const matchElements = document.querySelectorAll('.cb-col-100.cb-col.cb-series-matches.ng-scope');
@@ -92,6 +90,10 @@ const getTourDetailsFromHTML = () => {
                 if (null !== startTimeElement) {
                     const gameStartTime = parseFloat(startTimeElement.getAttribute('timestamp'));
 
+                    if (null === year) {
+                        year = new Date(gameStartTime).getFullYear();
+                    }
+
                     if (null === startTime) {
                         startTime = gameStartTime;
                     }
@@ -105,8 +107,6 @@ const getTourDetailsFromHTML = () => {
                     series[gameType].endTime = gameEndTime;
                 }
 
-
-
                 let matchLink = matchNameElement.href;
                 matchLink = matchLink.replace('cricket-scores', 'live-cricket-scorecard', matchLink);
 
@@ -119,8 +119,9 @@ const getTourDetailsFromHTML = () => {
         details.startTime = startTime;
         details.endTime = endTime;
         details.series = series;
+        details.year = year;
     } catch(e) {
-        // console.log(e);
+        console.log(e);
         details.error = e;
     }
 
@@ -145,6 +146,7 @@ const getTourDetails = async (tourUrl) => {
             waitUntil: 'networkidle2',
             timeout: 0
         });
+        page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
         details = await page.evaluate(getTourDetailsFromHTML);
         await page.close();

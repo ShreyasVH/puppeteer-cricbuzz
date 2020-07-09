@@ -62,7 +62,7 @@ exports.getMatchesForTour = getMatchesForTour;
 if (fileName === scriptName) {
     (async() => {
         const tourUrl = process.argv[2];
-        await getMatchesForTour(tourUrl);
+        await getMatchesForTour(tourUrl, null, null);
     })();
 }
 

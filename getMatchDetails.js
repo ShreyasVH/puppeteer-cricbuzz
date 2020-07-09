@@ -20,12 +20,10 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
             gameType = 'T20';
         } else if (gameTypeText.match('ODI')) {
             gameType = 'ODI';
-        } else if (gameTypeText.match('Test')) {
+        } else if (gameTypeText.match(/Test|test/)) {
             gameType = 'TEST';
-        } else if (gameTypeText.match('T20')) {
+        } else if (gameTypeText.match(/T20|t20/)) {
             gameType = 'T20';
-        } else if (gameType.match(/match|Match/)) {
-            gameType = 'ODI';
         }
 
         return gameType;
@@ -283,14 +281,10 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
         let matchName;
         let tourName;
         let gameType;
-        let year;
 
         const tourNameElement = document.querySelector('.cb-nav-subhdr a span');
         if (tourNameElement) {
             tourName = tourNameElement.innerText;
-
-            const matches = tourName.match(/(.*) ([0-9]{4})(-[0-9]{2})?/);
-            year = matches[2];
         }
 
         const matchNameElement = document.querySelector('h1[itemprop="name"]');
@@ -311,7 +305,6 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
         details.name = matchName;
         details.tourName = tourName;
         details.gameType = gameType;
-        details.year = year;
 
         let players = [];
         let bench = [];
@@ -530,7 +523,9 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
 
         const timeElement = document.querySelector('.schedule-date');
         if (timeElement) {
-            details.startTime = timeElement.getAttribute('timestamp');
+            let startTime = parseFloat(timeElement.getAttribute('timestamp'));
+            details.startTime = startTime;
+            details.year = new Date(startTime).getFullYear();
         }
 
         const stadiumElement = document.querySelector('a[itemprop="location"]');
@@ -636,7 +631,6 @@ const getMatchDetails = async (matchUrl) => {
                 console.log("\nError while getting stadium details. Exception: " + e + "\n");
             }
         }
-
         details.stadium = stadiumDetails;
         fs.writeFile(stadiumCacheFilePath, JSON.stringify(stadiumCache, null, ' '), error => {
             if (error) {
@@ -644,7 +638,6 @@ const getMatchDetails = async (matchUrl) => {
             }
         });
     }
-
 
     let players = [];
 
