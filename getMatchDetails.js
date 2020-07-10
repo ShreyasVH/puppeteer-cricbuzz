@@ -284,7 +284,7 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
 
         const tourNameElement = document.querySelector('.cb-nav-subhdr a span');
         if (tourNameElement) {
-            tourName = tourNameElement.innerText;
+            tourName = tourNameElement.innerText.replace(/\//g, '-');
         }
 
         const matchNameElement = document.querySelector('h1[itemprop="name"]');

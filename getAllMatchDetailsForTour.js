@@ -18,6 +18,8 @@ const getMatchesForTour = async (tourUrl, year, tourName) => {
         tourDetails = JSON.parse(fs.readFileSync('data/yearWiseDetails/' + year + '/tours/' + tourName + '/details.json'));
     } else {
         tourDetails = await getTourDetails(tourUrl);
+        year = tourDetails.year;
+        tourName = tourDetails.name;
     }
 
     const seriesList = Object.keys(tourDetails.series);

@@ -19,10 +19,10 @@ function getTourListFromHTML() {
         for (const tourElement of tourElements) {
             const spanElement = tourElement.querySelector('span');
             const tourText = spanElement.innerText.trim();
-            if (!tourText.match(/Postponed|Cancelled/)) {
+            if (!tourText.match(/Postponed|Cancelled|practice|Practice/)) {
                 const link = tourElement.href;
                 tourList.push({
-                    name: tourText,
+                    name: tourText.replace(/\//g, '-'),
                     link
                 });
             }

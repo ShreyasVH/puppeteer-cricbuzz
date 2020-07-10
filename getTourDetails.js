@@ -61,7 +61,7 @@ const getTourDetailsFromHTML = () => {
         let year = null;
         const tourNameElement = document.querySelector('.cb-nav-hdr.cb-font-24.line-ht30');
         if (null !== tourNameElement) {
-            tourName = tourNameElement.innerText;
+            tourName = tourNameElement.innerText.replace(/\//g, '-');
             details.name = tourName;
         }
 
@@ -149,6 +149,7 @@ const getTourDetails = async (tourUrl) => {
         page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
         details = await page.evaluate(getTourDetailsFromHTML);
+        // console.log(details);
         await page.close();
 
         try {
