@@ -656,13 +656,13 @@ const getMatchDetails = async (matchUrl) => {
     }
 
     for (let player of players) {
-        console.log("\n\t\t\t\tFetching details for player: " + player.player);
         let playerDetails;
         if (playerCache.hasOwnProperty(player.link)) {
             playerDetails = {
                 country: playerCache[player.link]
             };
         } else {
+            console.log("\n\t\t\t\tFetching details for player: " + player.player);
             try {
                 let playerURL = player.link;
                 let playerPage = await browser.newPage();
