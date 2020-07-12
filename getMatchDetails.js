@@ -50,224 +50,228 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
     const getInningsDetails = inning => {
         let details = {};
 
-        let inningsDiv = document.querySelector('#innings_' + inning);
-        if (inningsDiv) {
-            let divs = inningsDiv.children;
-            if (divs.length > 0) {
-                let batsmanDiv;
-                let bowlerDiv;
+        try {
+            let inningsDiv = document.querySelector('#innings_' + inning);
+            if (inningsDiv) {
+                let divs = inningsDiv.children;
+                if (divs.length > 0) {
+                    let batsmanDiv;
+                    let bowlerDiv;
 
-                for (const div of divs) {
-                    if (div.innerText.indexOf('Batsman') !== -1) {
-                        batsmanDiv = div;
-                    }
+                    for (const div of divs) {
+                        if (div.innerText.indexOf('Batsman') !== -1) {
+                            batsmanDiv = div;
+                        }
 
-                    if (div.innerText.indexOf('Bowler') !== -1) {
-                        bowlerDiv = div;
-                    }
-                }
-
-                if (batsmanDiv) {
-                    let battingScores = [];
-                    let extras = [];
-
-                    let battingScoreDivs = batsmanDiv.children;
-                    if (battingScoreDivs.length > 0) {
-                        let team;
-                        for (const battingScoreDiv of battingScoreDivs) {
-                            if (battingScoreDiv.innerText.indexOf('Innings') !== -1) {
-                                const inningsHeaderDiv = battingScoreDiv;
-                                const inningsHeaderSpans = inningsHeaderDiv.querySelectorAll('span');
-                                for (const inningsHeaderSpan of inningsHeaderSpans) {
-                                    if (inningsHeaderSpan.innerText.indexOf('Innings') !== -1) {
-                                        let inningsTextSpan = inningsHeaderSpan;
-                                        let inningsText = inningsTextSpan.innerText;
-                                        let matches = inningsText.match(/(.*) Innings/);
-                                        team = matches[1];
-
-                                        if (team.match(/1st/)) {
-                                            team = team.replace(' 1st', '');
-                                        } else if (team.match(/2nd/)) {
-                                            team = team.replace(' 2nd', '');
-                                        }
-                                        team = correctTeam(team);
-                                    }
-                                }
-                            } else if (battingScoreDiv.innerText.indexOf('Batsman') !== -1) {
-                                // header div
-                            } else if (battingScoreDiv.innerText.indexOf('Extras') !== -1) {
-                                // extras div
-
-                                const innerDivs = battingScoreDiv.children;
-                                const extrasDiv = innerDivs[2];
-                                if (extrasDiv) {
-                                    const extrasParts = extrasDiv.innerText.trim().replace('(', '').replace(')', '').split(', ');
-                                    for (const extrasObject of extrasParts) {
-                                        let parts = extrasObject.split(' ');
-                                        let type = extrasMapping[parts[0]];
-                                        let runs = parseInt(parts[1], 10);
-
-                                        if (runs > 0) {
-                                            extras.push({
-                                                type,
-                                                runs
-                                            });
-                                        }
-                                    }
-                                }
-                                details.extras = extras;
-                            } else if (battingScoreDiv.innerText.indexOf('Total') !== -1) {
-                                // total div
-                            } else if (battingScoreDiv.innerText.match(/Did not Bat|Yet to Bat/)) {
-                                // remaining batsman div
-                            } else {
-                                let battingScoreObject = {};
-                                let scoreDiv = battingScoreDiv;
-                                let innerDivs = scoreDiv.children;
-                                if (innerDivs.length > 0) {
-                                    let batsmanDiv = innerDivs[0];
-                                    let batsmanLink = batsmanDiv.querySelector('a');
-                                    if (batsmanLink) {
-                                        const matches = batsmanLink.title.match(/View profile of (.*)/);
-                                        battingScoreObject.player = matches[1].trim();
-                                    }
-
-                                    const dismissalDiv = innerDivs[1];
-                                    const dismissalText = dismissalDiv.innerText;
-                                    let dismissalMode = null;
-                                    let fielders;
-                                    let bowler;
-                                    if (dismissalText.match(/not out/)) {
-
-                                    } else if (dismissalText.match(/lbw b (.*)/)) {
-                                        dismissalMode = 'LBW';
-                                        let matches = dismissalText.match(/lbw b (.*)/);
-                                        bowler = matches[1];
-                                    } else if(dismissalText.match(/run out (.*)/)) {
-                                        dismissalMode = 'Run Out';
-                                        let matches = dismissalText.match(/run out (.*)/);
-                                        let fieldersText = matches[1].replace(/\(sub\)/g, '').replace('(', '').replace(')', '');
-                                        let fielderParts = fieldersText.split('/');
-                                        fielders = fielderParts.join(', ');
-                                    } else if(dismissalText.match(/hit wicket b (.*)/)) {
-                                        dismissalMode = 'Hit Wicket';
-                                        let matches = dismissalText.match(/hit wicket b (.*)/);
-                                        bowler = matches[1];
-                                    } else if(dismissalText.match(/handled the ball/)) {
-                                        dismissalMode = 'Handled the Ball';
-                                    } else if(dismissalText.match(/retd hurt/)) {
-                                        dismissalMode = 'Retired Hurt';
-                                    } else if(dismissalText.match(/st (.*) b (.*)/)) {
-                                        dismissalMode = 'Stumped';
-                                        let matches = dismissalText.match(/st (.*) b (.*)/);
-                                        fielders = matches[1];
-                                        bowler = matches[2];
-                                    } else if(dismissalText.match(/(c & b|c and b) (.*)/)) {
-                                        dismissalMode = 'Caught';
-                                        let matches = dismissalText.match(/(c & b|c and b) (.*)/);
-                                        fielders = matches[2];
-                                        bowler = matches[2];
-                                    } else if(dismissalText.match(/c (.*) b (.*)/)) {
-                                        dismissalMode = 'Caught';
-                                        let matches = dismissalText.match(/c (.*) b (.*)/);
-                                        fielders = matches[1];
-                                        bowler = matches[2];
-                                    } else if(dismissalText.match(/b (.*)/)) {
-                                        dismissalMode = 'Bowled';
-                                        let matches = dismissalText.match(/b (.*)/);
-                                        bowler = matches[1];
-                                    } else if(dismissalText.match(/obs/)) {
-                                        dismissalMode = 'Obstructing the Field';
-                                    }
-
-                                    if (dismissalMode) {
-                                        battingScoreObject.dismissalMode = dismissalMode;
-
-                                        if (fielders) {
-                                            fielders = fielders.replace(/\(sub\)/g, '');
-                                            battingScoreObject.fielders = fielders.trim();
-                                        }
-
-                                        if (bowler) {
-                                            battingScoreObject.bowler = bowler.trim();
-                                        }
-                                    }
-
-                                    let runsDiv = innerDivs[2];
-                                    battingScoreObject.runs = parseInt(runsDiv.innerText, 10);
-
-                                    let ballsDiv = innerDivs[3];
-                                    battingScoreObject.balls = parseInt(ballsDiv.innerText, 10);
-
-                                    let foursDiv = innerDivs[4];
-                                    battingScoreObject.fours = parseInt(foursDiv.innerText, 10);
-
-                                    let sixesDiv = innerDivs[5];
-                                    battingScoreObject.sixes = parseInt(sixesDiv.innerText, 10);
-
-                                    battingScoreObject.team = team;
-                                }
-
-                                if (Object.keys(battingScoreObject).length > 0) {
-                                    battingScores.push(battingScoreObject);
-                                }
-                            }
+                        if (div.innerText.indexOf('Bowler') !== -1) {
+                            bowlerDiv = div;
                         }
                     }
 
-                    details.battingScores = battingScores;
-                }
+                    if (batsmanDiv) {
+                        let battingScores = [];
+                        let extras = [];
 
-                if (bowlerDiv) {
-                    let bowlingFigures = [];
+                        let battingScoreDivs = batsmanDiv.children;
+                        if (battingScoreDivs.length > 0) {
+                            let team;
+                            for (const battingScoreDiv of battingScoreDivs) {
+                                if (battingScoreDiv.innerText.indexOf('Innings') !== -1) {
+                                    const inningsHeaderDiv = battingScoreDiv;
+                                    const inningsHeaderSpans = inningsHeaderDiv.querySelectorAll('span');
+                                    for (const inningsHeaderSpan of inningsHeaderSpans) {
+                                        if (inningsHeaderSpan.innerText.indexOf('Innings') !== -1) {
+                                            let inningsTextSpan = inningsHeaderSpan;
+                                            let inningsText = inningsTextSpan.innerText;
+                                            let matches = inningsText.match(/(.*) Innings/);
+                                            team = matches[1];
 
-                    let bowlingFigureDivs = bowlerDiv.children;
-                    if (bowlingFigureDivs.length > 0) {
-                        for (const bowlingFigureDiv of bowlingFigureDivs) {
-
-                            if (bowlingFigureDiv.innerText.indexOf('Bowler') !== -1) {
-                                // header div
-                            } else {
-                                let bowlingFigure = {};
-                                let mainDiv = bowlingFigureDiv;
-                                let innerDivs = mainDiv.children;
-
-                                if (innerDivs.length > 0) {
-                                    let bowlerDiv = innerDivs[0];
-
-                                    let bowlerLink = bowlerDiv.querySelector('a');
-                                    const matches = bowlerLink.title.match(/View profile of (.*)/);
-                                    bowlingFigure.player = matches[1].trim();
-
-                                    let ballsDiv = innerDivs[1];
-                                    let oversString = ballsDiv.innerText;
-                                    let overParts = oversString.split('.');
-                                    let balls = 0;
-                                    let overs = parseInt(overParts[0], 10);
-                                    if (overParts.length === 2) {
-                                        balls = parseInt(overParts[1],10);
+                                            if (team.match(/1st/)) {
+                                                team = team.replace(' 1st', '');
+                                            } else if (team.match(/2nd/)) {
+                                                team = team.replace(' 2nd', '');
+                                            }
+                                            team = correctTeam(team);
+                                        }
                                     }
-                                    balls += (overs * 6);
-                                    bowlingFigure.balls = balls;
+                                } else if (battingScoreDiv.innerText.indexOf('Batsman') !== -1) {
+                                    // header div
+                                } else if (battingScoreDiv.innerText.indexOf('Extras') !== -1) {
+                                    // extras div
 
-                                    let maidensDiv = innerDivs[2];
-                                    bowlingFigure.maidens = parseInt(maidensDiv.innerText, 10);
+                                    const innerDivs = battingScoreDiv.children;
+                                    const extrasDiv = innerDivs[2];
+                                    if (extrasDiv) {
+                                        const extrasParts = extrasDiv.innerText.trim().replace('(', '').replace(')', '').split(', ');
+                                        for (const extrasObject of extrasParts) {
+                                            let parts = extrasObject.split(' ');
+                                            let type = extrasMapping[parts[0]];
+                                            let runs = parseInt(parts[1], 10);
 
-                                    let runsDiv = innerDivs[3];
-                                    bowlingFigure.runs = parseInt(runsDiv.innerText, 10);
+                                            if (runs > 0) {
+                                                extras.push({
+                                                    type,
+                                                    runs
+                                                });
+                                            }
+                                        }
+                                    }
+                                    details.extras = extras;
+                                } else if (battingScoreDiv.innerText.indexOf('Total') !== -1) {
+                                    // total div
+                                } else if (battingScoreDiv.innerText.match(/Did not Bat|Yet to Bat/)) {
+                                    // remaining batsman div
+                                } else {
+                                    let battingScoreObject = {};
+                                    let scoreDiv = battingScoreDiv;
+                                    let innerDivs = scoreDiv.children;
+                                    if (innerDivs.length > 0) {
+                                        let batsmanDiv = innerDivs[0];
+                                        let batsmanLink = batsmanDiv.querySelector('a');
+                                        if (batsmanLink) {
+                                            const matches = batsmanLink.title.match(/View profile of (.*)/);
+                                            battingScoreObject.player = matches[1].trim();
+                                        }
 
-                                    let wicketsDiv = innerDivs[4];
-                                    bowlingFigure.wickets = parseInt(wicketsDiv.innerText, 10);
+                                        const dismissalDiv = innerDivs[1];
+                                        const dismissalText = dismissalDiv.innerText;
+                                        let dismissalMode = null;
+                                        let fielders;
+                                        let bowler;
+                                        if (dismissalText.match(/not out/)) {
 
-                                    bowlingFigures.push(bowlingFigure);
+                                        } else if (dismissalText.match(/lbw b (.*)/)) {
+                                            dismissalMode = 'LBW';
+                                            let matches = dismissalText.match(/lbw b (.*)/);
+                                            bowler = matches[1];
+                                        } else if(dismissalText.match(/run out (.*)/)) {
+                                            dismissalMode = 'Run Out';
+                                            let matches = dismissalText.match(/run out (.*)/);
+                                            let fieldersText = matches[1].replace(/\(sub\)/g, '').replace('(', '').replace(')', '');
+                                            let fielderParts = fieldersText.split('/');
+                                            fielders = fielderParts.join(', ');
+                                        } else if(dismissalText.match(/hit wicket b (.*)/)) {
+                                            dismissalMode = 'Hit Wicket';
+                                            let matches = dismissalText.match(/hit wicket b (.*)/);
+                                            bowler = matches[1];
+                                        } else if(dismissalText.match(/handled the ball/)) {
+                                            dismissalMode = 'Handled the Ball';
+                                        } else if(dismissalText.match(/retd hurt/)) {
+                                            dismissalMode = 'Retired Hurt';
+                                        } else if(dismissalText.match(/st (.*) b (.*)/)) {
+                                            dismissalMode = 'Stumped';
+                                            let matches = dismissalText.match(/st (.*) b (.*)/);
+                                            fielders = matches[1];
+                                            bowler = matches[2];
+                                        } else if(dismissalText.match(/(c & b|c and b) (.*)/)) {
+                                            dismissalMode = 'Caught';
+                                            let matches = dismissalText.match(/(c & b|c and b) (.*)/);
+                                            fielders = matches[2];
+                                            bowler = matches[2];
+                                        } else if(dismissalText.match(/c (.*) b (.*)/)) {
+                                            dismissalMode = 'Caught';
+                                            let matches = dismissalText.match(/c (.*) b (.*)/);
+                                            fielders = matches[1];
+                                            bowler = matches[2];
+                                        } else if(dismissalText.match(/b (.*)/)) {
+                                            dismissalMode = 'Bowled';
+                                            let matches = dismissalText.match(/b (.*)/);
+                                            bowler = matches[1];
+                                        } else if(dismissalText.match(/obs/)) {
+                                            dismissalMode = 'Obstructing the Field';
+                                        }
+
+                                        if (dismissalMode) {
+                                            battingScoreObject.dismissalMode = dismissalMode;
+
+                                            if (fielders) {
+                                                fielders = fielders.replace(/\(sub\)/g, '');
+                                                battingScoreObject.fielders = fielders.trim();
+                                            }
+
+                                            if (bowler) {
+                                                battingScoreObject.bowler = bowler.trim();
+                                            }
+                                        }
+
+                                        let runsDiv = innerDivs[2];
+                                        battingScoreObject.runs = parseInt(runsDiv.innerText, 10);
+
+                                        let ballsDiv = innerDivs[3];
+                                        battingScoreObject.balls = parseInt(ballsDiv.innerText, 10);
+
+                                        let foursDiv = innerDivs[4];
+                                        battingScoreObject.fours = parseInt(foursDiv.innerText, 10);
+
+                                        let sixesDiv = innerDivs[5];
+                                        battingScoreObject.sixes = parseInt(sixesDiv.innerText, 10);
+
+                                        battingScoreObject.team = team;
+                                    }
+
+                                    if (Object.keys(battingScoreObject).length > 0) {
+                                        battingScores.push(battingScoreObject);
+                                    }
                                 }
                             }
                         }
+
+                        details.battingScores = battingScores;
                     }
 
-                    details.bowlingFigures = bowlingFigures;
+                    if (bowlerDiv) {
+                        let bowlingFigures = [];
+
+                        let bowlingFigureDivs = bowlerDiv.children;
+                        if (bowlingFigureDivs.length > 0) {
+                            for (const bowlingFigureDiv of bowlingFigureDivs) {
+
+                                if (bowlingFigureDiv.innerText.indexOf('Bowler') !== -1) {
+                                    // header div
+                                } else {
+                                    let bowlingFigure = {};
+                                    let mainDiv = bowlingFigureDiv;
+                                    let innerDivs = mainDiv.children;
+
+                                    if (innerDivs.length > 0) {
+                                        let bowlerDiv = innerDivs[0];
+
+                                        let bowlerLink = bowlerDiv.querySelector('a');
+                                        const matches = bowlerLink.title.match(/View profile of (.*)/);
+                                        bowlingFigure.player = matches[1].trim();
+
+                                        let ballsDiv = innerDivs[1];
+                                        let oversString = ballsDiv.innerText;
+                                        let overParts = oversString.split('.');
+                                        let balls = 0;
+                                        let overs = parseInt(overParts[0], 10);
+                                        if (overParts.length === 2) {
+                                            balls = parseInt(overParts[1],10);
+                                        }
+                                        balls += (overs * 6);
+                                        bowlingFigure.balls = balls;
+
+                                        let maidensDiv = innerDivs[2];
+                                        bowlingFigure.maidens = parseInt(maidensDiv.innerText, 10);
+
+                                        let runsDiv = innerDivs[3];
+                                        bowlingFigure.runs = parseInt(runsDiv.innerText, 10);
+
+                                        let wicketsDiv = innerDivs[4];
+                                        bowlingFigure.wickets = parseInt(wicketsDiv.innerText, 10);
+
+                                        bowlingFigures.push(bowlingFigure);
+                                    }
+                                }
+                            }
+                        }
+
+                        details.bowlingFigures = bowlingFigures;
+                    }
                 }
             }
+        } catch (error) {
+            console.log('\nError while getting innings details. Innings: ' + inning + '. Error: ' + error + '\n');
         }
 
         return details;
@@ -479,46 +483,50 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
             }
         }
 
-        const resultElement = document.querySelector('.cb-scrcrd-status');
-        let resultText = resultElement.innerText;
-        const resultTextParts = resultText.split(' - ');
-        resultText = resultTextParts[resultTextParts.length - 1];
-        if (resultText.indexOf(' won ') !== -1) {
-            if (resultText.match(/super|Super|eliminator/)) {
-                let matches = resultText.match(/\((.*) won (.*)/);
-                let winner = correctTeam(matches[1]);
-                details.winner = winner;
-                details.result = 'SUPER_OVER';
-            } else if (resultText.match(/bowl|Bowl/)) {
-                let matches = resultText.match(/\((.*) won (.*)/);
-                let winner = correctTeam(matches[1]);
-                details.winner = winner;
-                details.result = 'BOWL_OUT';
-            } else {
-                let matches = resultText.match(/(.*) won by([a-zA-Z ]*)([0-9]+) ([a-zA-Z]+)/);
-                const winner = correctTeam(matches[1]);
-                const winMargin = matches[3];
-                const winMarginTypeText = matches[4];
+        try {
+            const resultElement = document.querySelector('.cb-scrcrd-status');
+            let resultText = resultElement.innerText;
+            const resultTextParts = resultText.split(' - ');
+            resultText = resultTextParts[resultTextParts.length - 1];
+            if (resultText.indexOf(' won ') !== -1) {
+                if (resultText.match(/super|Super|eliminator/)) {
+                    let matches = resultText.match(/\((.*) won (.*)/);
+                    let winner = correctTeam(matches[1]);
+                    details.winner = winner;
+                    details.result = 'SUPER_OVER';
+                } else if (resultText.match(/bowl|Bowl/)) {
+                    let matches = resultText.match(/\((.*) won (.*)/);
+                    let winner = correctTeam(matches[1]);
+                    details.winner = winner;
+                    details.result = 'BOWL_OUT';
+                } else {
+                    let matches = resultText.match(/(.*) won by([a-zA-Z ]*)([0-9]+) ([a-zA-Z]+)/);
+                    const winner = correctTeam(matches[1]);
+                    const winMargin = matches[3];
+                    const winMarginTypeText = matches[4];
 
-                details.winner = winner;
-                details.result = 'NORMAL';
-                details.winMargin = winMargin;
+                    details.winner = winner;
+                    details.result = 'NORMAL';
+                    details.winMargin = winMargin;
 
 
-                let winMarginType;
-                if (winMarginTypeText.match(/wkt|wicket/)) {
-                    winMarginType = 'WICKET';
-                } else if (winMarginTypeText.match(/run/)) {
-                    winMarginType = 'RUN';
+                    let winMarginType;
+                    if (winMarginTypeText.match(/wkt|wicket/)) {
+                        winMarginType = 'WICKET';
+                    } else if (winMarginTypeText.match(/run/)) {
+                        winMarginType = 'RUN';
+                    }
+                    details.winMarginType = winMarginType;
                 }
-                details.winMarginType = winMarginType;
+            } else if (resultText.match('tie')) {
+                details.result = 'TIE';
+            } else if (resultText.indexOf(' drawn') !== -1) {
+                details.result = 'DRAW';
+            } else {
+                details.result = 'WASHED_OUT';
             }
-        } else if (resultText.match('tie')) {
-            details.result = 'TIE';
-        } else if (resultText.indexOf(' drawn') !== -1) {
-            details.result = 'DRAW';
-        } else {
-            details.result = 'WASHED_OUT';
+        } catch (error) {
+            console.log('\nError while parsing result. Error: ' + error + '\n');
         }
 
         const timeElement = document.querySelector('.schedule-date');
