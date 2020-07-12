@@ -18,7 +18,7 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
         const gameTypeText = matchNameParts[1];
         if (tourName.match(/T20|Twenty20/)) {
             gameType = 'T20';
-        } else if (gameTypeText.match('ODI')) {
+        } else if (gameTypeText.match(/ODI|odi/)) {
             gameType = 'ODI';
         } else if (gameTypeText.match(/Test|test/)) {
             gameType = 'TEST';
@@ -300,7 +300,7 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
 
             team1 = correctTeam(matches[1]);
             team2 = correctTeam(matches[2]);
-            matchName = teamsText + ', ' + matchNameParts[1];
+            matchName = (teamsText + ', ' + matchNameParts[1]).toLowerCase();
 
             gameType = getGameType(matchName, tourName);
         }
@@ -615,7 +615,7 @@ const getMatchDetails = async (matchUrl) => {
     }
 
     let stadiumCache = {};
-    const stadiumCacheFilePath = 'data/yearWiseDetails/stadiumCache.json';
+    const stadiumCacheFilePath = 'data/stadiumCache.json';
     if (fs.existsSync(stadiumCacheFilePath)) {
         stadiumCache = JSON.parse(fs.readFileSync(stadiumCacheFilePath));
     }
@@ -658,7 +658,7 @@ const getMatchDetails = async (matchUrl) => {
     }
 
     let playerCache = {};
-    const playerCacheFilePath = 'data/yearWiseDetails/playerCache.json';
+    const playerCacheFilePath = 'data/playerCache.json';
     if (fs.existsSync(playerCacheFilePath)) {
         playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
     }
@@ -722,7 +722,7 @@ const getMatchDetails = async (matchUrl) => {
             fs.mkdirSync(gameTypeFilePath);
         }
 
-        const matchFilePath = gameTypeFilePath + '/' + details.name.toLowerCase() + '.json';
+        const matchFilePath = gameTypeFilePath + '/' + details.name + '.json';
         fs.writeFile(matchFilePath, JSON.stringify(details, null, '  '), error => {
             if (error) {
                 console.log("\n\t\tError while writing match data. Error: " + error + "\n");

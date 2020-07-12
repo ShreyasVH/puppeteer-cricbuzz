@@ -19,11 +19,11 @@ const getTourDetailsFromHTML = () => {
         const gameTypeText = matchNameParts[1];
         if (tourName.match(/T20|Twenty20/)) {
             gameType = 'T20';
-        } else if (gameTypeText.match('ODI')) {
+        } else if (gameTypeText.match(/ODI|odi/)) {
             gameType = 'ODI';
-        } else if (gameTypeText.match('Test')) {
+        } else if (gameTypeText.match(/Test|test/)) {
             gameType = 'TEST';
-        } else if (gameTypeText.match('T20')) {
+        } else if (gameTypeText.match(/T20|t20/)) {
             gameType = 'T20';
         } else if (gameType.match(/match|Match/)) {
             gameType = 'ODI';
@@ -74,7 +74,9 @@ const getTourDetailsFromHTML = () => {
             const dateDiv = detailsChildren[1];
             const matchNameElement = matchNameDiv.querySelector('a');
             const matchNameSpan = matchNameElement.querySelector('span');
-            const matchName = matchNameSpan.innerText;
+            const matchNameParts = matchNameSpan.innerText.split(', ');
+            const teamsText = matchNameParts[0];
+            const matchName = (teamsText + ', ' + matchNameParts[1]).toLowerCase();
             if (!matchName.match(/Practice|practice|warm/)) {
                 const gameType = getGameType(matchName, tourName);
 
