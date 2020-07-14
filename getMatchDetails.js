@@ -686,17 +686,20 @@ const getMatchDetails = async (matchUrl) => {
 
         if (playerDetails.country) {
             player.country = playerDetails.country;
-            playerCache[player.link] = playerDetails.country;
+
+            if (!playerCache.hasOwnProperty(player.link)) {
+                playerCache[player.link] = playerDetails.country;
+
+                fs.writeFile(playerCacheFilePath, JSON.stringify(playerCache, null, ' '), error => {
+                    if (error) {
+                        console.log("\n\t\tError while writing player cache. Error: " + error + "\n");
+                    }
+                });
+            }
         }
     }
 
     try {
-        fs.writeFile(playerCacheFilePath, JSON.stringify(playerCache, null, ' '), error => {
-            if (error) {
-                console.log("\n\t\tError while writing player cache. Error: " + error + "\n");
-            }
-        });
-
         const yearFilePath = 'data/yearWiseDetails/' + details.year;
         if (!fs.existsSync(yearFilePath)) {
             fs.mkdirSync(yearFilePath);
