@@ -32,31 +32,11 @@ const getTourDetailsFromHTML = () => {
         return gameType;
     };
 
-    const getEndTime = (startTime, gameType) => {
-        let endTime = startTime;
-
-        switch (gameType) {
-            case 'T20':
-                endTime += (3 * 3600 * 1000);
-                break;
-            case 'ODI':
-                endTime += (7 * 3600 * 1000);
-                break;
-            case 'TEST':
-                endTime += (4 * 24 * 3600 * 1000 + 6 * 3600 * 1000);
-                break;
-        }
-
-        return endTime;
-    };
-
-
     let details = {};
     let series = {};
 
     try {
         let startTime = null;
-        let endTime = null;
         let tourName = '';
         let year = null;
         const tourNameElement = document.querySelector('.cb-nav-hdr.cb-font-24.line-ht30');
@@ -83,8 +63,7 @@ const getTourDetailsFromHTML = () => {
                 if (!series.hasOwnProperty(gameType)) {
                     series[gameType] = {
                         matches: [],
-                        startTime: null,
-                        endTime: null
+                        startTime: null
                     };
                 }
 
@@ -103,10 +82,6 @@ const getTourDetailsFromHTML = () => {
                     if (null == series[gameType].startTime) {
                         series[gameType].startTime = gameStartTime;
                     }
-
-                    const gameEndTime = getEndTime(gameStartTime, gameType);
-                    endTime = gameEndTime;
-                    series[gameType].endTime = gameEndTime;
                 }
 
                 let matchLink = matchNameElement.href;
@@ -119,7 +94,6 @@ const getTourDetailsFromHTML = () => {
             }
         }
         details.startTime = startTime;
-        details.endTime = endTime;
         details.series = series;
         details.year = year;
     } catch(e) {
