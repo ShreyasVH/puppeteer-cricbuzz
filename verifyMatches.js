@@ -45,7 +45,20 @@ for (let year of years) {
 
                     const matches = fs.readdirSync(gameTypeFolder);
                     for (const match of matches) {
-                        createdMatches.push(gameType + '_' + match.replace('.json', ''));
+                        const matchFile = gameTypeFolder + '/' + match;
+                        let details = {};
+
+                        try {
+                            details = JSON.parse(fs.readFileSync(matchFile));
+                        } catch (e) {
+                            console.log("\nError while getting match details. Error: " + e + "\n");
+                        }
+
+                        if (details.hasOwnProperty('stadium') && details.stadium.hasOwnProperty('name')) {
+                            createdMatches.push(gameType + '_' + match.replace('.json', ''));
+                        } else {
+                            console.log("\nDid not find complete match details. Name: " + match + "\n");
+                        }
 
                         const previousYearString = String(year - 1);
                         if (missingMatches.hasOwnProperty(previousYearString) && missingMatches[previousYearString].hasOwnProperty(tour) && missingMatches[previousYearString][tour].hasOwnProperty(gameType) && (-1 !== missingMatches[previousYearString][tour][gameType].indexOf(match.replace('.json', '')))) {
