@@ -57,7 +57,7 @@ const getTourDetailsFromHTML = () => {
             const matchNameParts = matchNameSpan.innerText.split(', ');
             const teamsText = matchNameParts[0];
             const matchName = (teamsText + ', ' + matchNameParts[1]).toLowerCase();
-            if (!matchName.match(/Practice|practice|warm/)) {
+            if (!matchName.match(/Practice|practice|warm|Warm/)) {
                 const gameType = getGameType(matchName, tourName);
 
                 if (!series.hasOwnProperty(gameType)) {
