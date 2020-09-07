@@ -150,7 +150,7 @@ const getMatchDetailsFromHTML = (teamReplacements) => {
                                             let fieldersText = matches[1].replace(/\(sub\)/g, '').replace('(', '').replace(')', '');
                                             let fielderParts = fieldersText.split('/');
                                             fielders = fielderParts.join(', ');
-                                        } else if(dismissalText.match(/hit wicket b (.*)/)) {
+                                        } else if(dismissalText.match(/hit wicket b (.*)|hit wkt b (.*)/)) {
                                             dismissalMode = 'Hit Wicket';
                                             let matches = dismissalText.match(/hit wicket b (.*)/);
                                             bowler = matches[1];
@@ -550,7 +550,7 @@ const getPlayersOfMatchDetailsFromHTML = () => {
     let details = {};
     let motm = [];
     let mots = [];
-    const motmElements = document.querySelectorAll('.cb-mom-itm');
+    const motmElements = document.querySelectorAll('.cb-mom-itm.ng-scope');
 
     for(const motmElement of motmElements) {
         let label = motmElement.querySelector('span').innerText;
@@ -608,6 +608,7 @@ const getMatchDetails = async (matchUrl) => {
             waitUntil: 'networkidle2',
             timeout: 0
         });
+        page.on('console', msg => console.log('MOTM PAGE LOG:', msg.text()));
         let motmDetails = await motmPage.evaluate(getPlayersOfMatchDetailsFromHTML);
         details = Object.assign({}, details, motmDetails);
     } catch (e) {
