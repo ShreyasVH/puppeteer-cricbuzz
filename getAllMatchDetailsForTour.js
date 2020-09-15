@@ -41,9 +41,13 @@ const getMatchesForTour = async (tourUrl, year, tourName) => {
             }
             console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
 
+            let matchDetailsPresent = false;
             if (year && tourName && fs.existsSync('data/yearWiseDetails/' + year + '/tours/' + tourName + '/series/' + gameType + '/' + match.name.toLowerCase() + '.json')) {
-                //ignore
-            } else {
+                const matchDetails = JSON.parse(fs.readFileSync('data/yearWiseDetails/' + year + '/tours/' + tourName + '/series/' + gameType + '/' + match.name.toLowerCase() + '.json'));
+                matchDetailsPresent = matchDetails.stadium && (Object.keys(matchDetails.stadium).length > 0);
+            }
+
+            if (!matchDetailsPresent) {
                 try {
                     await getMatchDetails(match.link);
                 } catch (e) {
