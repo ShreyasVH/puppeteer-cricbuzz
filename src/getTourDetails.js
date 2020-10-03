@@ -9,28 +9,11 @@ const scriptName = path.basename(__filename);
 const fileNameParts = process.argv[1].split('\/');
 const fileName = fileNameParts[fileNameParts.length - 1];
 
+const getTourIdFromLink = require('./utils').getTourIdFromLink;
+const getGameType = require('./utils').getGameType;
 
-const getTourDetailsFromHTML = () => {
-    const getGameType = (matchName, tourName) => {
-        let gameType = 'ODI';
-
-        let matches = matchName.match(/(.*) vs (.*), (.*)/);
-        const matchNameParts = matchName.split(', ');
-        const gameTypeText = matchNameParts[1];
-        if (tourName.match(/T20|Twenty20/)) {
-            gameType = 'T20';
-        } else if (gameTypeText.match(/ODI|odi/)) {
-            gameType = 'ODI';
-        } else if (gameTypeText.match(/Test|test/)) {
-            gameType = 'TEST';
-        } else if (gameTypeText.match(/T20|t20/)) {
-            gameType = 'T20';
-        } else if (gameType.match(/match|Match/)) {
-            gameType = 'ODI';
-        }
-
-        return gameType;
-    };
+const getTourDetailsFromHTML = (getGameTypeDef) => {
+    const getGameType = new Function(' return (' + getGameTypeDef + ').apply(null, arguments)');
 
     let details = {};
     let series = {};
@@ -58,7 +41,7 @@ const getTourDetailsFromHTML = () => {
             const teamsText = matchNameParts[0];
             const matchName = (teamsText + ', ' + matchNameParts[1]).toLowerCase();
             if (!matchName.match(/Practice|practice|warm|Warm/)) {
-                const gameType = getGameType(matchName, tourName);
+                const gameType = getGameType.call(null, matchName, tourName);
 
                 if (!series.hasOwnProperty(gameType)) {
                     series[gameType] = {
@@ -68,9 +51,9 @@ const getTourDetailsFromHTML = () => {
                 }
 
                 const startTimeElement = dateDiv.querySelector('span.schedule-date');
+                let gameStartTime = '';
                 if (null !== startTimeElement) {
-                    const gameStartTime = parseFloat(startTimeElement.getAttribute('timestamp'));
-
+                    gameStartTime = parseFloat(startTimeElement.getAttribute('timestamp'));
                     if (null === year) {
                         year = new Date(gameStartTime).getFullYear();
                     }
@@ -85,20 +68,23 @@ const getTourDetailsFromHTML = () => {
                 }
 
                 let matchLink = matchNameElement.href;
+                matchLink = matchLink.replace('live-cricket-scores', 'live-cricket-scorecard', matchLink);
                 matchLink = matchLink.replace('cricket-scores', 'live-cricket-scorecard', matchLink);
 
                 series[gameType].matches.push({
                     name: matchName,
-                    link: matchLink
+                    link: matchLink,
+                    startTime: gameStartTime
                 });
             }
         }
         details.startTime = startTime;
         details.series = series;
         details.year = year;
-    } catch(e) {
+        details.tourLink = location.href;
+    } catch (e) {
+        details = {};
         console.log(e);
-        details.error = e;
     }
 
     return details;
@@ -124,34 +110,20 @@ const getTourDetails = async (tourUrl) => {
         });
         page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-        details = await page.evaluate(getTourDetailsFromHTML);
-        // console.log(details);
+        details = await page.evaluate(getTourDetailsFromHTML, getGameType.toString());
         await page.close();
 
-        try {
-            const yearFilePath = 'data/yearWiseDetails/' + details.year;
-            if (!fs.existsSync(yearFilePath)) {
-                fs.mkdirSync(yearFilePath);
+        if (Object.keys(details).length > 0) {
+            const baseFolder = 'data/tourDetails';
+            const tourId = getTourIdFromLink(details.tourLink);
+            if (tourId) {
+                const tourDetailsFilePath = baseFolder + '/' + tourId + '.json';
+                fs.writeFile(tourDetailsFilePath, JSON.stringify(details, null, '  '), error => {
+                    if (error) {
+                        console.log("\t\tError while writing tour details data. Error: " + error);
+                    }
+                });
             }
-
-            const toursFolderPath = yearFilePath + '/tours';
-            if (!fs.existsSync(toursFolderPath)) {
-                fs.mkdirSync(toursFolderPath);
-            }
-
-            const tourFilePath = toursFolderPath + '/' + details.name;
-            if (!fs.existsSync(tourFilePath)) {
-                fs.mkdirSync(tourFilePath);
-            }
-
-            const tourDetailsFilePath = tourFilePath + '/details.json';
-            fs.writeFile(tourDetailsFilePath, JSON.stringify(details, null, '  '), error => {
-                if (error) {
-                    console.log("\n\t\tError while writing tour details data. Error: " + error + "\n");
-                }
-            });
-        } catch (e) {
-            console.log("\nError while writing files. Error: " + e + "\n");
         }
 
         await browser.close();

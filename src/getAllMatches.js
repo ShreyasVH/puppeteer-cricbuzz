@@ -3,27 +3,26 @@
 const fs = require('fs');
 
 const getTourList = require('./getTourList.js').getTourList;
-
-const getMatchesForTour = require('./getAllMatchDetailsForTour.js').getMatchesForTour;
+const getMatchesForTour = require('./getTourMatches.js').getMatchesForTour;
 
 if (process.argv.length >= 4) {
     let start = parseInt(process.argv[2], 10);
     let end = parseInt(process.argv[3], 10);
 
     if (isNaN(start) || isNaN(end)) {
-        console.log("\nPlease provide valid start and end year\n");
+        console.log("Please provide valid start and end year");
     } else {
         (async() => {
             for (let year = start; year <= end; year++) {
                 let details = {};
                 if (year > start) {
-                    console.log("\n.........................................\n");
+                    console.log(".........................................");
                 }
-                console.log("\nProcessing year - " + year + "\n");
+                console.log("Processing year - " + year);
 
                 try {
                     let tourList = [];
-                    const tourListFilePath = 'data/yearWiseDetails/' + year + '/tourList.json';
+                    const tourListFilePath = 'data/tourLists/' + year + '.json';
                     if (fs.existsSync(tourListFilePath)) {
                         tourList = JSON.parse(fs.readFileSync(tourListFilePath));
                     } else {
@@ -34,29 +33,29 @@ if (process.argv.length >= 4) {
                     for (const tour of tourList) {
                         if (tourIndex > 1) {
                             // break;
-                            console.log("\n\t--------------------------------------------\n");
+                            console.log("\t--------------------------------------------");
                         }
-                        console.log("\n\tProcessing tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
+                        console.log("\tProcessing tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]");
 
                         try {
-                            await getMatchesForTour(tour.link, year, tour.name);
+                            await getMatchesForTour(tour.link);
                         } catch (e) {
-                            console.log("\nError while getting tour details. Exception: " + e + "\n");
+                            console.log("Error while getting tour details. Exception: " + e + "");
                         }
 
-                        console.log("\n\tProcessed tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]\n");
+                        console.log("\tProcessed tour - " + tour.name + " [" + tourIndex + "/" + tourList.length + "]");
                         tourIndex++;
                     }
                 } catch (e) {
-                    console.log("\nError while getting tourlist. Exception: " + e + "\n");
+                    console.log("Error while getting tourlist. Exception: " + e);
                 }
 
-                console.log("\nProcessed year - " + year + "\n");
+                console.log("Processed year - " + year);
             }
         })();
     }
 } else {
-    console.log("\nPlease provide start and end year\n");
+    console.log("Please provide start and end year");
 }
 
 
