@@ -4,13 +4,18 @@ const fs = require('fs');
 
 const getPlayerIdFromLink = require('./utils').getPlayerIdFromLink;
 const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetails;
+const getBallsFromOversText = require('./utils').getBallsFromOversText;
+const getPlayer = require('./utils').getPlayer;
+const write = require('./sheets').write;
 
 (async() => {
-
+    const sheetId = '1vJ9HQOrXTfgD-1c4TdTXv8QTpIhJk5MwIXFkKJEmWRw';
     const baseDirectory = 'data/matches';
 
     const playerCacheFilePath = 'data/playerCache.json';
     let playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
+
+    let playerReplacements = JSON.parse(fs.readFileSync('data/playerReplacements.json'));
 
     let stats = {};
 
@@ -49,7 +54,7 @@ const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetail
                     const gameType = details.gameType;
                     if (details.players) {
                         for (const player of details.players) {
-                            const playerId = getPlayerIdFromLink(player.link);
+                            const playerId = parseInt(getPlayerIdFromLink(player.link), 10);
 
                             let playerDetails = {};
                             if (playerCache.hasOwnProperty(playerId)) {
@@ -95,6 +100,14 @@ const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetail
                                 }
 
                                 stats[playerId].bowling[gameType].matches++;
+
+                                if (!stats[playerId].fielding.hasOwnProperty(gameType)) {
+                                    stats[playerId].fielding[gameType] = {
+                                        catches: 0,
+                                        stumpings: 0,
+                                        runouts: 0
+                                    };
+                                }
                             }
                         }
                     }
@@ -108,6 +121,27 @@ const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetail
                             stats[playerId].batting[gameType].sixes += score.sixes;
                             stats[playerId].batting[gameType].fours += score.fours;
                             stats[playerId].batting[gameType].innings++;
+
+                            const bowlingTeam = ((details.team1 === score.team) ? details.team2 : ((details.team2 === score.team) ? details.team1 : ''));
+
+                            if (score.fielders) {
+                                const fielders = score.fielders.split(', ');
+                                for (const fielder of fielders) {
+                                    const playerResponse = getPlayer(fielder, bowlingTeam, details.players, playerReplacements);
+                                    if (playerResponse.link) {
+                                        let fielderId = getPlayerIdFromLink(playerResponse.link);
+                                        if (fielderId) {
+                                            if (score.dismissalMode === 'Run Out') {
+                                                stats[fielderId].fielding[gameType].runouts++;
+                                            } else if (score.dismissalMode === 'Caught') {
+                                                stats[fielderId].fielding[gameType].catches++;
+                                            } else if (score.dismissalMode === 'Stumped') {
+                                                stats[fielderId].fielding[gameType].stumpings++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -116,7 +150,7 @@ const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetail
                             const playerId = getPlayerIdFromLink(figure.playerLink);
 
                             stats[playerId].bowling[gameType].runs += figure.runs;
-                            stats[playerId].bowling[gameType].balls += figure.balls;
+                            stats[playerId].bowling[gameType].balls += await getBallsFromOversText(figure.oversText, details.startTime, details.stadiumURL);
                             stats[playerId].bowling[gameType].wickets += figure.wickets;
                             stats[playerId].bowling[gameType].maidens += figure.maidens;
                             stats[playerId].bowling[gameType].innings++;
@@ -152,7 +186,32 @@ const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetail
             'Balls',
             'Fours',
             'Sixes'
-        ].join(', ')
+        ]
+    ];
+
+    let bowlingStats = [
+        [
+            'PlayerId',
+            'Name',
+            'GameType',
+            'Matches',
+            'Innings',
+            'Wickets',
+            'Runs',
+            'Balls',
+            'Maidens'
+        ]
+    ];
+
+    let fieldingStats = [
+        [
+            'PlayerId',
+            'Name',
+            'GameType',
+            'Catches',
+            'Stumpings',
+            'Runouts'
+        ]
     ];
 
     for (const [playerId, playerStats] of Object.entries(stats)) {
@@ -170,18 +229,52 @@ const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetail
                         gameTypeStats.balls,
                         gameTypeStats.fours,
                         gameTypeStats.sixes
-                    ].join(', ')
+                    ]
                 );
+            }
+        }
+
+        const bowling = playerStats.bowling;
+        if (Object.keys(bowling).length > 0) {
+            for (const [gameType, gameTypeStats] of Object.entries(bowling)) {
+                bowlingStats.push(
+                    [
+                        playerId,
+                        playerStats.name,
+                        gameType,
+                        gameTypeStats.matches,
+                        gameTypeStats.innings,
+                        gameTypeStats.wickets,
+                        gameTypeStats.runs,
+                        gameTypeStats.balls,
+                        gameTypeStats.maidens
+                    ]
+                );
+            }
+        }
+
+        const fielding = playerStats.fielding;
+        if (Object.keys(fielding).length > 0) {
+            for (const [gameType, gameTypeStats] of Object.entries(fielding)) {
+                if ((gameTypeStats.catches + gameTypeStats.stumpings + gameTypeStats.runouts) > 0) {
+                    fieldingStats.push(
+                        [
+                            playerId,
+                            playerStats.name,
+                            gameType,
+                            gameTypeStats.catches,
+                            gameTypeStats.stumpings,
+                            gameTypeStats.runouts
+                        ]
+                    );
+                }
             }
         }
     }
 
-    fs.writeFile('data/playerStatsStaticBatting.csv', battingStats.join('\n'), error => {
-        if (error) {
-            console.log("\t\tError while writing stats. Error: " + error + "");
-        }
-    });
-
+    await write(sheetId, 'batting!A1:I', 'RAW', battingStats);
+    await write(sheetId, 'bowling!A1:I', 'RAW', bowlingStats);
+    await write(sheetId, 'fielding!A1:F', 'RAW', fieldingStats);
 })();
 
 

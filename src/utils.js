@@ -189,7 +189,9 @@ const getPlayer = (name, teamName, players, playerReplacements) => {
                 // console.log(nameParts[0]);
                 // console.log(playerParts[playerParts.length - 1]);
 
-                return getPlayer(nameParts[nameParts.length - 1], teamName, players, playerReplacements);
+                if (nameParts.length > 1) {
+                    return getPlayer(nameParts[nameParts.length - 1], teamName, players, playerReplacements);
+                }
             }
             pIndex++;
         }
