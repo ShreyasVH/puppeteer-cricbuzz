@@ -162,7 +162,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                             const hitWicketRegex = /^hit wicket b (.*)|hit wkt b (.*)$/;
                             const obstructedRegex = /obs/;
                             const timedOutRegex = /timed out/;
-                            const retiredHurtRegex = /retd hurt/;
+                            const retiredHurtRegex = /retd hurt|retired hurt|retired ill/;
                             const handledRegex = /handled the ball/;
 
                             if (dismissalModeText.match(/not out/)) {

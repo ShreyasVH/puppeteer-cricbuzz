@@ -12,6 +12,7 @@ let matchesWithMissingPlayers = [];
 let unknownPlayers = {};
 let ambiguousPlayers = [];
 let missedTexts = [];
+let dismissals = [];
 
 const playerReplacements = JSON.parse(fs.readFileSync('data/playerReplacements.json'));
 
@@ -114,6 +115,13 @@ for (const tour of tours) {
 
                             sIndex++;
                         }
+
+                        if ((null === score.dismissalMode) && (!score.dismissalModeText.toLowerCase().match(/not out|run out|absent hurt|retired ill|retired hurt|absent ill/))) {
+                            dismissals.push({
+                                text: score.dismissalModeText,
+                                mode: score.dismissalMode
+                            });
+                        }
                     }
                 } else {
                     matchesWithMissingPlayers.push({
@@ -179,4 +187,8 @@ fs.writeFile('data/matchesWithMissingPlayers.json', JSON.stringify(matchesWithMi
     }
 });
 
-
+fs.writeFile('data/dismissals.json', JSON.stringify(dismissals, null, '  '), error => {
+    if (error) {
+        console.log("\t\tError while writing missing players data. Error: " + error + "");
+    }
+});
