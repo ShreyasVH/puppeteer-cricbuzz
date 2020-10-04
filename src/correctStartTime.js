@@ -2,22 +2,8 @@
 
 const fs = require('fs');
 
-const getPlayerIdFromLink = require('./utils').getPlayerIdFromLink;
-const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetails;
-const getBallsFromOversText = require('./utils').getBallsFromOversText;
-const getPlayer = require('./utils').getPlayer;
-const write = require('./sheets').write;
-
 (async() => {
-    const sheetId = '1vJ9HQOrXTfgD-1c4TdTXv8QTpIhJk5MwIXFkKJEmWRw';
     const baseDirectory = 'data/matches';
-
-    const playerCacheFilePath = 'data/playerCache.json';
-    let playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
-
-    let playerReplacements = JSON.parse(fs.readFileSync('data/playerReplacements.json'));
-
-    let stats = {};
 
     const tours = fs.readdirSync(baseDirectory);
 
