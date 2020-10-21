@@ -156,11 +156,11 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                             const caughtAndBowledRegex = /(c & b|c and b|c&b) (.*)/;
                             const caughtRegex = /^c (.*) b (.*)$/;
                             const lbwRegex = /^lbw b (.*)$/;
-                            const runOutRegex = /^run out (.*)$/;
+                            const runOutRegex = /^run out(.*)$/;
                             const stumpedRegex = /^st (.*) b (.*)$/;
                             const hitTwiceRegex = /hit twice/;
                             const hitWicketRegex = /^hit wicket b (.*)|hit wkt b (.*)$/;
-                            const obstructedRegex = /obs/;
+                            const obstructedRegex = /^obs$/;
                             const timedOutRegex = /timed out/;
                             const retiredHurtRegex = /retd hurt|retired hurt|retired ill/;
                             const handledRegex = /handled the ball/;
@@ -457,7 +457,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
         resultText = resultTextParts[resultTextParts.length - 1];
         details.resultText = resultText;
         if (resultText.indexOf(' won ') !== -1) {
-            if (resultText.match(/super|Super|eliminator/)) {
+            if (resultText.match(/super over|Super Over|eliminator/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
                 let winner = correctTeam(matches[1]);
                 details.winner = winner;
