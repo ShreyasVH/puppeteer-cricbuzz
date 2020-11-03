@@ -3,7 +3,7 @@
 const fs = require('fs');
 
 const getPlayerIdFromLink = require('./utils').getPlayerIdFromLink;
-const gePlayerDetails = require('./getPlayerDetailsFromCricbuzz').gePlayerDetails;
+const getPlayerDetails = require('./getPlayerDetailsFromCricbuzz').getPlayerDetails;
 const getBallsFromOversText = require('./utils').getBallsFromOversText;
 const getPlayer = require('./utils').getPlayer;
 const write = require('./sheets').write;
@@ -16,6 +16,7 @@ const write = require('./sheets').write;
     let playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
 
     let playerReplacements = JSON.parse(fs.readFileSync('data/playerReplacements.json'));
+    let teamReplacements = JSON.parse(fs.readFileSync('data/teamReplacements.json'));
 
     let stats = {};
 
@@ -61,7 +62,7 @@ const write = require('./sheets').write;
                                 playerDetails = playerCache[playerId];
                             } else {
                                 console.log('\t\t\tFetching player details. ' + playerId);
-                                playerDetails = await gePlayerDetails(playerId);
+                                playerDetails = await getPlayerDetails(playerId);
                                 playerCache[playerId] = playerDetails;
                             }
 
@@ -126,17 +127,24 @@ const write = require('./sheets').write;
 
                             if (score.fielders) {
                                 const fielders = score.fielders.split(', ');
-                                for (const fielder of fielders) {
-                                    const playerResponse = getPlayer(fielder, bowlingTeam, details.players, playerReplacements);
-                                    if (playerResponse.link) {
-                                        let fielderId = getPlayerIdFromLink(playerResponse.link);
-                                        if (fielderId) {
-                                            if (score.dismissalMode === 'Run Out') {
-                                                stats[fielderId].fielding[gameType].runouts++;
-                                            } else if (score.dismissalMode === 'Caught') {
-                                                stats[fielderId].fielding[gameType].catches++;
-                                            } else if (score.dismissalMode === 'Stumped') {
-                                                stats[fielderId].fielding[gameType].stumpings++;
+                                for (let fielder of fielders) {
+                                    if (fielder.match(/sub \((.*)\)/)) {
+                                        // console.log(fieldersString);
+                                        fielder = 'sub';
+                                    }
+
+                                    if ('sub' !== fielder) {
+                                        const playerResponse = getPlayer(fielder, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
+                                        if (playerResponse.link) {
+                                            let fielderId = getPlayerIdFromLink(playerResponse.link);
+                                            if (fielderId) {
+                                                if (score.dismissalMode === 'Run Out') {
+                                                    stats[fielderId].fielding[gameType].runouts++;
+                                                } else if (score.dismissalMode === 'Caught') {
+                                                    stats[fielderId].fielding[gameType].catches++;
+                                                } else if (score.dismissalMode === 'Stumped') {
+                                                    stats[fielderId].fielding[gameType].stumpings++;
+                                                }
                                             }
                                         }
                                     }

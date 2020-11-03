@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const getStadiumDetails = require('./getStadiumDetails').getStadiumDetails;
 
 const getPlayerIdFromLink = link => {
@@ -29,11 +30,13 @@ const getTourIdFromLink = link => {
     return parseInt(tourLinkMatches[2], 10);
 };
 
-const getPlayer = (name, teamName, players, playerReplacements) => {
+const getPlayer = (name, teamName, players, bench, playerReplacements, teamReplacements) => {
     let playerResponse = {
         name: '',
         link: ''
     };
+
+    teamName = correctTeam(teamName, teamReplacements);
 
     // console.log(JSON.stringify(players, null, ' '));
 
@@ -46,13 +49,22 @@ const getPlayer = (name, teamName, players, playerReplacements) => {
 
     let options = [];
 
+    players = players.concat(bench);
+
+    if (name === 'sub') {
+        return {
+            name: 'sub',
+            link: 'https://www.cricbuzz.com/profiles/1/sub'
+        };
+    }
+
     let pIndex = 1;
     for (const playerObject of players) {
         if (pIndex > 1) {
             // break;
         }
 
-        if (teamName === playerObject.team) {
+        if (teamName === correctTeam(playerObject.team, teamReplacements)) {
             const player = playerObject.player;
 
             if (player === name) {
@@ -89,7 +101,7 @@ const getPlayer = (name, teamName, players, playerReplacements) => {
                 // break;
             }
 
-            if (teamName === playerObject.team) {
+            if (teamName === correctTeam(playerObject.team, teamReplacements)) {
                 const player = playerObject.player;
 
                 let nameParts = name.split(' ');
@@ -119,7 +131,7 @@ const getPlayer = (name, teamName, players, playerReplacements) => {
                 // break;
             }
 
-            if (teamName === playerObject.team) {
+            if (teamName === correctTeam(playerObject.team, teamReplacements)) {
                 const player = playerObject.player;
 
                 let nameParts = name.split(' ');
@@ -149,7 +161,7 @@ const getPlayer = (name, teamName, players, playerReplacements) => {
                 // break;
             }
 
-            if (teamName === playerObject.team) {
+            if (teamName === correctTeam(playerObject.team, teamReplacements)) {
                 const player = playerObject.player;
 
                 let nameParts = name.split(' ');
@@ -179,7 +191,7 @@ const getPlayer = (name, teamName, players, playerReplacements) => {
                 // break;
             }
 
-            if (teamName === playerObject.team) {
+            if (teamName === correctTeam(playerObject.team, teamReplacements)) {
                 const player = playerObject.player;
 
                 let nameParts = name.split(' ');
@@ -190,7 +202,7 @@ const getPlayer = (name, teamName, players, playerReplacements) => {
                 // console.log(playerParts[playerParts.length - 1]);
 
                 if (nameParts.length > 1) {
-                    return getPlayer(nameParts[nameParts.length - 1], teamName, players, playerReplacements);
+                    return getPlayer(nameParts[nameParts.length - 1], teamName, players, bench, playerReplacements, teamReplacements);
                 }
             }
             pIndex++;
@@ -321,6 +333,20 @@ const getBallsPerOver = async (matchStartTime, stadiumUrl) => {
     return balls;
 }
 
+const correctTeam = (team, teamReplacements) => {
+    let output = team;
+
+    if (null === teamReplacements) {
+        teamReplacements = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../data/teamReplacements.json')));
+    }
+
+    if (teamReplacements.hasOwnProperty(team.toLowerCase())) {
+        output = teamReplacements[team.toLowerCase()];
+    }
+
+    return output;
+};
+
 exports.getPlayerIdFromLink = getPlayerIdFromLink;
 exports.getStadiumIdFromLink = getStadiumIdFromLink;
 exports.getPlayer = getPlayer;
@@ -329,3 +355,4 @@ exports.getTourIdFromLink = getTourIdFromLink;
 exports.getGameType = getGameType;
 exports.getBallsFromOversText = getBallsFromOversText;
 exports.getBallsPerOver = getBallsPerOver;
+exports.correctTeam = correctTeam;

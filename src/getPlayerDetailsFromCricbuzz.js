@@ -24,7 +24,12 @@ const getPlayerDetailsFromHTML = () => {
 
         let dobElement = document.querySelector('.cb-col.cb-col-60.cb-lst-itm-sm');
         if (null !== dobElement) {
-            let matches = dobElement.innerText.match(/(.*) \((.*)\)/);
+            let matches;
+            if (dobElement.innerText.match(/\(/)) {
+                matches = dobElement.innerText.match(/(.*) \((.*)\)/);
+            } else {
+                matches = dobElement.innerText.match(/(.*)/);
+            }
             if (matches) {
                 const dateOfBirth = new Date(matches[1]);
                 details.birthDate = dateOfBirth.getTime();
@@ -33,102 +38,101 @@ const getPlayerDetailsFromHTML = () => {
         }
 
         let tables = document.querySelectorAll('table');
+        if (tables.length > 0) {
+            let battingStats = {};
+            let bowlingStats = {};
 
-        let battingStats = {};
-        let bowlingStats = {};
+            let batsmanTable = tables[0];
+            let batsmanRows = batsmanTable.querySelectorAll('tbody tr');
+            for (const row of batsmanRows) {
+                const cells = row.querySelectorAll('td');
 
-        let batsmanTable = tables[0];
-        let batsmanRows = batsmanTable.querySelectorAll('tbody tr');
-        for (const row of batsmanRows) {
-            const cells = row.querySelectorAll('td');
+                const gameTypeDiv = cells[0];
+                const gameType = gameTypeDiv.innerText;
 
-            const gameTypeDiv = cells[0];
-            const gameType = gameTypeDiv.innerText;
+                const matchesDiv = cells[1];
+                const matches = matchesDiv.innerText;
 
-            const matchesDiv = cells[1];
-            const matches = matchesDiv.innerText;
+                const inningsDiv = cells[2];
+                const innings = inningsDiv.innerText;
 
-            const inningsDiv = cells[2];
-            const innings = inningsDiv.innerText;
+                const runsDiv = cells[4];
+                const runs = runsDiv.innerText;
 
-            const runsDiv = cells[4];
-            const runs = runsDiv.innerText;
+                const highestDiv = cells[5];
+                const highest = highestDiv.innerText;
 
-            const highestDiv = cells[5];
-            const highest = highestDiv.innerText;
+                const ballsDiv = cells[7];
+                const balls = ballsDiv.innerText;
 
-            const ballsDiv = cells[7];
-            const balls = ballsDiv.innerText;
+                const foursDiv = cells[12];
+                const fours = foursDiv.innerText;
 
-            const foursDiv = cells[12];
-            const fours = foursDiv.innerText;
+                const sixesDiv = cells[13];
+                const sixes = sixesDiv.innerText;
 
-            const sixesDiv = cells[13];
-            const sixes = sixesDiv.innerText;
+                battingStats[gameType] = {
+                    matches,
+                    innings,
+                    runs,
+                    balls,
+                    highest,
+                    fours,
+                    sixes
+                };
+            }
+            details.battingStats = battingStats;
 
-            battingStats[gameType] = {
-                matches,
-                innings,
-                runs,
-                balls,
-                highest,
-                fours,
-                sixes
-            };
+            let bowlerTable = tables[1];
+            let bowlerRows = bowlerTable.querySelectorAll('tbody tr');
+            for (const row of bowlerRows) {
+                const cells = row.querySelectorAll('td');
+
+                const gameTypeDiv = cells[0];
+                const gameType = gameTypeDiv.innerText;
+
+                const matchesDiv = cells[1];
+                const matches = matchesDiv.innerText;
+
+                const inningsDiv = cells[2];
+                const innings = inningsDiv.innerText;
+
+                const ballsDiv = cells[3];
+                const balls = ballsDiv.innerText;
+
+                const runsDiv = cells[4];
+                const runs = runsDiv.innerText;
+
+                const wicketsDiv = cells[5];
+                const wickets = wicketsDiv.innerText;
+
+                const fifersDiv = cells[11];
+                const fifers = fifersDiv.innerText;
+
+                const tenWicketsDiv = cells[12];
+                const tenWickets = tenWicketsDiv.innerText;
+
+                bowlingStats[gameType] = {
+                    matches,
+                    innings,
+                    balls,
+                    runs,
+                    wickets,
+                    fifers,
+                    tenWickets
+                };
+            }
+            details.bowlingStats = bowlingStats;
         }
-        details.battingStats = battingStats;
-
-        let bowlerTable = tables[1];
-        let bowlerRows = bowlerTable.querySelectorAll('tbody tr');
-        for (const row of bowlerRows) {
-            const cells = row.querySelectorAll('td');
-
-            const gameTypeDiv = cells[0];
-            const gameType = gameTypeDiv.innerText;
-
-            const matchesDiv = cells[1];
-            const matches = matchesDiv.innerText;
-
-            const inningsDiv = cells[2];
-            const innings = inningsDiv.innerText;
-
-            const ballsDiv = cells[3];
-            const balls = ballsDiv.innerText;
-
-            const runsDiv = cells[4];
-            const runs = runsDiv.innerText;
-
-            const wicketsDiv = cells[5];
-            const wickets = wicketsDiv.innerText;
-
-            const fifersDiv = cells[11];
-            const fifers = fifersDiv.innerText;
-
-            const tenWicketsDiv = cells[12];
-            const tenWickets = tenWicketsDiv.innerText;
-
-            bowlingStats[gameType] = {
-                matches,
-                innings,
-                balls,
-                runs,
-                wickets,
-                fifers,
-                tenWickets
-            };
-        }
-        details.bowlingStats = bowlingStats;
     } catch (e) {
         console.log("\nError while fetching stats for player. Error: " + e + "\n");
         details = {};
     }
 
-
-
     return details;
 };
 
-const gePlayerDetails = async (playerId) => {
+const getPlayerDetails = async (playerId) => {
     let details = {};
     try {
         const browser  = await puppeteer.launch({
@@ -141,6 +145,7 @@ const gePlayerDetails = async (playerId) => {
         });
 
         const playerUrl = 'https://www.cricbuzz.com/profiles/' + playerId;
+        console.log('Fetching player details for : ' + playerId);
 
         const page = await browser.newPage();
         await page.goto(playerUrl, {
@@ -174,11 +179,12 @@ const gePlayerDetails = async (playerId) => {
     return details;
 };
 
-exports.gePlayerDetails = gePlayerDetails;
+exports.getPlayerDetails = getPlayerDetails;
 
 if (fileName === scriptName) {
     (async() => {
         const playerId = process.argv[2];
-        const playerDetails = await gePlayerDetails(playerId);
+        const playerDetails = await getPlayerDetails(playerId);
+        console.log(JSON.stringify(playerDetails, null, ' '));
     })();
 }
