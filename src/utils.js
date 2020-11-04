@@ -30,7 +30,7 @@ const getTourIdFromLink = link => {
     return parseInt(tourLinkMatches[2], 10);
 };
 
-const getPlayer = (name, teamName, players, bench, playerReplacements, teamReplacements) => {
+const getPlayer = (name, teamName, players, bench, playerReplacements, teamReplacements, isRecursive = false) => {
     let playerResponse = {
         name: '',
         link: ''
@@ -40,7 +40,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
 
     // console.log(JSON.stringify(players, null, ' '));
 
-    if (playerReplacements.hasOwnProperty(name)) {
+    if (!isRecursive && playerReplacements.hasOwnProperty(name)) {
         name = playerReplacements[name];
     }
     // console.log(JSON.stringify(playerReplacements));
@@ -202,7 +202,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
                 // console.log(playerParts[playerParts.length - 1]);
 
                 if (nameParts.length > 1) {
-                    return getPlayer(nameParts[nameParts.length - 1], teamName, players, bench, playerReplacements, teamReplacements);
+                    return getPlayer(nameParts[nameParts.length - 1], teamName, players, bench, playerReplacements, teamReplacements, true);
                 }
             }
             pIndex++;

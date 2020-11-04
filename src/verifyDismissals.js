@@ -32,8 +32,8 @@ for (const tour of tours) {
 
     const matches = fs.readdirSync(tourFolder);
     let mIndex = 1;
-    let playersForAmbiguity = {};
     for (const match of matches) {
+        let playersForAmbiguity = {};
         if (mIndex > 1) {
             // break;
             console.log('\t....................................');
@@ -78,7 +78,7 @@ for (const tour of tours) {
 
                             let fielders = fieldersString.split(', ');
                             for (let fielder of fielders) {
-                                if (fielder.match(/sub \((.*)\)/)) {
+                                if (fielder.match(/sub \((.*)\)|sub \[(.*)]/)) {
                                     // console.log(fieldersString);
                                     fielder = 'sub';
                                 }

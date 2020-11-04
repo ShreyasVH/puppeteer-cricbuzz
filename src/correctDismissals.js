@@ -73,7 +73,7 @@ for (const tour of tours) {
                             let fielders = fieldersString.split(', ');
                             let updatedFielders = [];
                             for (let fielder of fielders) {
-                                if (fielder.match(/sub \((.*)\)/)) {
+                                if (fielder.match(/sub \((.*)\)|sub \[(.*)\]/)) {
                                     // console.log(fieldersString);
                                     fielder = 'sub';
                                     changesPresent = true;
@@ -83,7 +83,7 @@ for (const tour of tours) {
                                     subsPresent = true;
                                     changesPresent = true;
                                 }
-                                updatedFielders.push(fielders);
+                                updatedFielders.push(fielder);
                             }
                             score.fielders = updatedFielders.join(', ');
                             sIndex++;
