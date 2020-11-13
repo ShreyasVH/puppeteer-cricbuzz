@@ -132,7 +132,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                                 oversText,
                                 innings: inning
                             };
-                        } else if (row.innerText.toLowerCase().indexOf('did not bat') !== -1) {
+                        } else if (row.innerText.toLowerCase().match('did not bat|yet to bat')) {
 
                         } else {
                             let score = {};
@@ -159,7 +159,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                             const runOutRegex = /^run out(.*)$/;
                             const stumpedRegex = /^st (.*) b (.*)$/;
                             const hitTwiceRegex = /hit twice/;
-                            const hitWicketRegex = /^hit wicket b (.*)|hit wkt b (.*)$/;
+                            const hitWicketRegex = /^(hit wicket|hit wkt) b (.*)$/;
                             const obstructedRegex = /^obs|obstructing the field$/;
                             const timedOutRegex = /timed out/;
                             const retiredHurtRegex = /retd hurt|retired hurt|retired ill/;
@@ -180,7 +180,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                             } else if(dismissalModeText.match(hitWicketRegex)) {
                                 dismissalMode = 'Hit Wicket';
                                 let matches = dismissalModeText.match(hitWicketRegex);
-                                bowler = matches[1];
+                                bowler = matches[2];
                             } else if(dismissalModeText.match(handledRegex)) {
                                 dismissalMode = 'Handled the Ball';
                             } else if(dismissalModeText.match(retiredHurtRegex)) {
