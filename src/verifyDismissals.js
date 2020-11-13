@@ -78,7 +78,7 @@ for (const tour of tours) {
 
                             let fielders = fieldersString.split(', ');
                             for (let fielder of fielders) {
-                                if (fielder.match(/sub \((.*)\)|sub \[(.*)]/)) {
+                                if (fielder.match(/sub \((.*)\)|sub \[(.*)]|\(sub\)/)) {
                                     // console.log(fieldersString);
                                     fielder = 'sub';
                                 }
