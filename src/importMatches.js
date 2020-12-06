@@ -448,7 +448,7 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                 for (const score of details.battingScores) {
                     const batsmanDetails = await getPlayerDetailsFromURL(score.playerLink);
 
-                    if (['absent hurt', 'absent ill'].indexOf(score.dismissalModeText) !== -1) {
+                    if (['absent hurt', 'absent ill', 'abs hurt', 'retd out'].indexOf(score.dismissalModeText) !== -1) {
                         console.log(score.dismissalModeText);
                         continue;
                     }

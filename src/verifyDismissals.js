@@ -103,27 +103,25 @@ for (const tour of tours) {
                                     }
                                 }
                             }
+                        }
 
-                            if (score.bowler) {
-                                let playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
-                                let name = playerResponse.name;
-                                if (name) {
-                                    corrections[score.bowler] = name;
+                        if (score.bowler) {
+                            let playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
+                            let name = playerResponse.name;
+                            if (name) {
+                                corrections[score.bowler] = name;
+                            } else {
+                                if (playerResponse.options) {
+                                    playersForAmbiguity[score.bowler] = playerResponse.options;
                                 } else {
-                                    if (playerResponse.options) {
-                                        playersForAmbiguity[score.bowler] = playerResponse.options;
-                                    } else {
-                                        if (!unknownPlayers.hasOwnProperty(score.bowler)) {
-                                            unknownPlayers[score.bowler] = detailsForLogging;
-                                        }
+                                    if (!unknownPlayers.hasOwnProperty(score.bowler)) {
+                                        unknownPlayers[score.bowler] = detailsForLogging;
                                     }
                                 }
                             }
-
-                            sIndex++;
                         }
 
-                        if ((null === score.dismissalMode) && (!score.dismissalModeText.toLowerCase().match(/not out|absent hurt|absent ill/))) {
+                        if ((null === score.dismissalMode) && (!score.dismissalModeText.toLowerCase().match(/not out|absent hurt|absent ill|abs hurt|retd out/))) {
                             dismissals.push({
                                 text: score.dismissalModeText,
                                 mode: score.dismissalMode,
@@ -149,7 +147,7 @@ for (const tour of tours) {
                                 ];
                             }
                         }
-
+                        sIndex++;
                     }
                 } else {
                     matchesWithMissingPlayers.push({

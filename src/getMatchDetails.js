@@ -401,12 +401,12 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
 
                 index++;
             }
-
-            details.players = players;
-            details.bench = bench;
-            details.captains = captains;
-            details.wicketKeepers = wicketKeepers;
         }
+
+        details.players = players;
+        details.bench = bench;
+        details.captains = captains;
+        details.wicketKeepers = wicketKeepers;
 
         let matchInfoElements = document.querySelectorAll('.cb-mtch-info-itm');
         for (let matchInfoElement of matchInfoElements) {
