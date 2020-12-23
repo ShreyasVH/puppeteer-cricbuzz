@@ -141,6 +141,34 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
                 // console.log(nameParts[0]);
                 // console.log(playerParts[playerParts.length - 1]);
 
+                if ((playerParts[playerParts.length - 1] === nameParts[nameParts.length - 1]) && (nameParts[0][0].toLowerCase() === playerParts[0][0].toLowerCase())) {
+                    options.push({
+                        name: player,
+                        link: playerObject.link
+                    });
+                }
+            }
+            pIndex++;
+        }
+    }
+
+    if(options.length === 0)
+    {
+        for (const playerObject of players) {
+            if (pIndex > 1) {
+                // break;
+            }
+
+            if (teamName === correctTeam(playerObject.team, teamReplacements)) {
+                const player = playerObject.player;
+
+                let nameParts = name.split(' ');
+                let playerParts = player.split(' ');
+                // console.log(JSON.stringify(nameParts, null, ' '));
+                // console.log(JSON.stringify(playerParts, null, ' '));
+                // console.log(nameParts[0]);
+                // console.log(playerParts[playerParts.length - 1]);
+
                 if (nameParts.length === 1) {
                     if (playerParts.indexOf(nameParts[0]) !== -1) {
                         options.push({
