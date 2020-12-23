@@ -352,12 +352,16 @@ const importSeries = async (details, existingTours, existingSeries, existingTeam
                     const result = response.result;
                     existingSeries[seriesKey] = result.id;
                 } else {
-                    errors.push({
-                        payload,
-                        status: response.status,
-                        response: response.result,
-                        type: 'IMPORT_SERIES'
-                    });
+                    const result = response.result;
+                    const errorCode = result.code;
+                    if (errorCode !== 4004) {
+                        errors.push({
+                            payload,
+                            status: response.status,
+                            response: response.result,
+                            type: 'IMPORT_SERIES'
+                        });
+                    }
                 }
             }
         }
@@ -369,203 +373,206 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
     const tourDetailsFilePath = path.resolve(__dirname, '../data/tourDetails/' + tourId + '.json');
     if (fs.existsSync(tourDetailsFilePath)) {
         const tourDetails = JSON.parse(fs.readFileSync(tourDetailsFilePath));
-        const tourStartTime = tourDetails.startTime;
         const gameType = details.gameType;
-        const seriesKey = tourDetails.name + '_' + tourStartTime + '_' + gameType;
 
-        if (existingSeries.hasOwnProperty(seriesKey)) {
-            const seriesId = existingSeries[seriesKey];
+        if (tourDetails.series && tourDetails.series[gameType] && tourDetails.series[gameType].startTime) {
+            const seriesStartTime = tourDetails.series[gameType].startTime;
+            const seriesKey = tourDetails.name + '_' + seriesStartTime + '_' + gameType;
 
-            const stadiumDetails = await getStadiumDetailsFromURL(details.stadiumURL);
+            if (existingSeries.hasOwnProperty(seriesKey)) {
+                const seriesId = existingSeries[seriesKey];
 
-            let payload = {
-                seriesId,
-                team1: existingTeams[correctTeam(details.team1, teamReplacements) + '_1_INTERNATIONAL'],
-                team2: existingTeams[correctTeam(details.team2, teamReplacements) + '_1_INTERNATIONAL'],
-                result: details.result,
-                stadium: existingStadiums[stadiumDetails.name + '_' + existingCountries[stadiumDetails.country]],
-                startTime: details.startTime
-            };
+                const stadiumDetails = await getStadiumDetailsFromURL(details.stadiumURL);
 
-            if (details.hasOwnProperty('tossWinner')) {
-                payload.tossWinner = existingTeams[correctTeam(details.tossWinner, teamReplacements) + '_1_INTERNATIONAL'];
-            }
+                let payload = {
+                    seriesId,
+                    team1: existingTeams[correctTeam(details.team1, teamReplacements) + '_1_INTERNATIONAL'],
+                    team2: existingTeams[correctTeam(details.team2, teamReplacements) + '_1_INTERNATIONAL'],
+                    result: details.result,
+                    stadium: existingStadiums[stadiumDetails.name + '_' + existingCountries[stadiumDetails.country]],
+                    startTime: details.startTime
+                };
 
-            if (details.hasOwnProperty('batFirst')) {
-                payload.batFirst = existingTeams[correctTeam(details.batFirst, teamReplacements) + '_1_INTERNATIONAL'];
-            }
-
-            if (details.hasOwnProperty('winner')) {
-                payload.winner = existingTeams[correctTeam(details.winner, teamReplacements) + '_1_INTERNATIONAL'];
-            }
-
-            if (details.hasOwnProperty('winMargin')) {
-                payload.winMargin = parseInt(details.winMargin, 10);
-            }
-
-            if (details.hasOwnProperty('winMarginType')) {
-                payload.winMarginType = details.winMarginType;
-            }
-
-            let extras = [];
-            if (details.hasOwnProperty('extras')) {
-                for (const extrasObject of details.extras) {
-                    extras.push({
-                        runs: extrasObject.runs,
-                        type: extrasObject.type,
-                        battingTeam: existingTeams[correctTeam(extrasObject.battingTeam, teamReplacements) + '_1_INTERNATIONAL'],
-                        bowlingTeam: existingTeams[correctTeam(extrasObject.bowlingTeam, teamReplacements) + '_1_INTERNATIONAL'],
-                        innings: extrasObject.innings,
-                        teamInnings: extrasObject.teamInnings
-                    });
+                if (details.hasOwnProperty('tossWinner')) {
+                    payload.tossWinner = existingTeams[correctTeam(details.tossWinner, teamReplacements) + '_1_INTERNATIONAL'];
                 }
-            }
-            payload.extras = extras;
 
-            let players = [];
-            let playerList = [];
-            if (details.hasOwnProperty('players')) {
-                playerList = playerList.concat(details.players);
-            }
+                if (details.hasOwnProperty('batFirst')) {
+                    payload.batFirst = existingTeams[correctTeam(details.batFirst, teamReplacements) + '_1_INTERNATIONAL'];
+                }
 
-            if (details.hasOwnProperty('bench')) {
-                playerList = playerList.concat(details.bench);
-            }
+                if (details.hasOwnProperty('winner')) {
+                    payload.winner = existingTeams[correctTeam(details.winner, teamReplacements) + '_1_INTERNATIONAL'];
+                }
 
-            for (const player of playerList) {
-                const playerDetails = await getPlayerDetailsFromURL(player.link);
-                players.push({
-                    playerId: existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate],
-                    teamId: existingTeams[correctTeam(player.team, teamReplacements) + '_1_INTERNATIONAL'],
-                    name: playerDetails.name
-                });
+                if (details.hasOwnProperty('winMargin')) {
+                    payload.winMargin = parseInt(details.winMargin, 10);
+                }
 
-            }
-            payload.players = players;
+                if (details.hasOwnProperty('winMarginType')) {
+                    payload.winMarginType = details.winMarginType;
+                }
 
-            let battingScores = [];
-            if (details.hasOwnProperty('battingScores')) {
-                for (const score of details.battingScores) {
-                    const batsmanDetails = await getPlayerDetailsFromURL(score.playerLink);
-
-                    if (['absent hurt', 'absent ill', 'abs hurt', 'retd out'].indexOf(score.dismissalModeText) !== -1) {
-                        console.log(score.dismissalModeText);
-                        continue;
+                let extras = [];
+                if (details.hasOwnProperty('extras')) {
+                    for (const extrasObject of details.extras) {
+                        extras.push({
+                            runs: extrasObject.runs,
+                            type: extrasObject.type,
+                            battingTeam: existingTeams[correctTeam(extrasObject.battingTeam, teamReplacements) + '_1_INTERNATIONAL'],
+                            bowlingTeam: existingTeams[correctTeam(extrasObject.bowlingTeam, teamReplacements) + '_1_INTERNATIONAL'],
+                            innings: extrasObject.innings,
+                            teamInnings: extrasObject.teamInnings
+                        });
                     }
-
-                    let battingTeam = correctTeam(score.team, teamReplacements);
-                    let bowlingTeam = ((battingTeam === correctTeam(details.team1, teamReplacements)) ? correctTeam(details.team2, teamReplacements) : ((battingTeam === correctTeam(details.team2, teamReplacements)) ? correctTeam(details.team1, teamReplacements) : ''));
-                    let scoreObject = {
-                        playerId: existingPlayers[batsmanDetails.name + '_' + existingCountries[batsmanDetails.country] + '_' + batsmanDetails.birthDate],
-                        runs: score.runs,
-                        balls: score.balls,
-                        fours: score.fours,
-                        sixes: score.sixes,
-                        innings: score.innings,
-                        teamInnings: score.teamInnings
-                    };
-
-                    if (score.dismissalMode) {
-                        scoreObject.dismissalMode = dismissalModes[score.dismissalMode];
-
-                        if (score.bowler) {
-                            const bowler = getPlayer(score.bowler, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
-                            const bowlerDetails = await getPlayerDetailsFromURL(bowler.link);
-                            scoreObject.bowlerId = existingPlayers[bowlerDetails.name + '_' + existingCountries[bowlerDetails.country] + '_' + bowlerDetails.birthDate];
-
-                            if ('undefined' === typeof scoreObject.bowlerId) {
-                                console.log(score.bowler);
-                                console.log(bowler);
-                                console.log(bowlerDetails.name + '_' + existingCountries[bowlerDetails.country] + '_' + bowlerDetails.birthDate);
-                            }
-                        }
-
-                        if (score.fielders) {
-                            let fielders = [];
-                            const fieldersString = score.fielders;
-                            const fielderParts = fieldersString.split(', ');
-                            for (let fielderName of fielderParts) {
-                                if (fielderName.match(/sub \((.*)\)/)) {
-                                    // console.log(fieldersString);
-                                    fielderName = 'sub';
-                                }
-
-                                const fielder = getPlayer(fielderName, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
-                                const fielderDetails = await getPlayerDetailsFromURL(fielder.link);
-                                const fielderId = existingPlayers[fielderDetails.name + '_' + existingCountries[fielderDetails.country] + '_' + fielderDetails.birthDate];
-                                fielders.push(fielderId);
-                                if ('undefined' === typeof fielderId) {
-                                    console.log(fielderName);
-                                    console.log(fielder);
-                                    console.log(fielderDetails.name + '_' + existingCountries[fielderDetails.country] + '_' + fielderDetails.birthDate);
-                                }
-                            }
-
-                            scoreObject.fielders = fielders.join(', ');
-                        }
-                    }
-
-                    battingScores.push(scoreObject);
                 }
-            }
-            payload.battingScores = battingScores;
+                payload.extras = extras;
 
-            let bowlingFigures = [];
-            if (details.hasOwnProperty('bowlingFigures')) {
-                for (const figure of details.bowlingFigures) {
-                    const bowlerDetails = await getPlayerDetailsFromURL(figure.playerLink);
-                    bowlingFigures.push({
-                        playerId: existingPlayers[bowlerDetails.name + '_' + existingCountries[bowlerDetails.country] + '_' + bowlerDetails.birthDate],
-                        balls: await getBallsFromOversText(figure.oversText, details.startTime, details.stadiumURL),
-                        maidens: figure.maidens,
-                        runs: figure.runs,
-                        wickets: figure.wickets,
-                        innings: figure.innings,
-                        teamInnings: figure.teamInnings
-                    });
+                let players = [];
+                let playerList = [];
+                if (details.hasOwnProperty('players')) {
+                    playerList = playerList.concat(details.players);
                 }
-            }
 
-            payload.bowlingFigures = bowlingFigures;
+                if (details.hasOwnProperty('bench')) {
+                    playerList = playerList.concat(details.bench);
+                }
 
-            let manOfTheMatchList = [];
-            if (details.hasOwnProperty('manOfTheMatchList')) {
-                for (const player of details.manOfTheMatchList) {
+                for (const player of playerList) {
                     const playerDetails = await getPlayerDetailsFromURL(player.link);
-                    manOfTheMatchList.push(existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate]);
+                    players.push({
+                        playerId: existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate],
+                        teamId: existingTeams[correctTeam(player.team, teamReplacements) + '_1_INTERNATIONAL'],
+                        name: playerDetails.name
+                    });
+
                 }
-            }
+                payload.players = players;
 
-            payload.manOfTheMatchList = manOfTheMatchList;
+                let battingScores = [];
+                if (details.hasOwnProperty('battingScores')) {
+                    for (const score of details.battingScores) {
+                        const batsmanDetails = await getPlayerDetailsFromURL(score.playerLink);
 
-            // console.log(JSON.stringify(payload, null, ' '));
+                        if (['absent hurt', 'absent ill', 'abs hurt', 'retd out'].indexOf(score.dismissalModeText) !== -1) {
+                            console.log(score.dismissalModeText);
+                            continue;
+                        }
 
-            const url = endpoint + '/cricbuzz/matches';
-            const response = await post(url, payload);
-            let isDeleteRequired = false;
-            if (response.status === 200) {
-                isDeleteRequired = true;
-            } else {
-                const result = response.result;
-                const errorCode = result.code;
-                if (errorCode === 4004) {
+                        let battingTeam = correctTeam(score.team, teamReplacements);
+                        let bowlingTeam = ((battingTeam === correctTeam(details.team1, teamReplacements)) ? correctTeam(details.team2, teamReplacements) : ((battingTeam === correctTeam(details.team2, teamReplacements)) ? correctTeam(details.team1, teamReplacements) : ''));
+                        let scoreObject = {
+                            playerId: existingPlayers[batsmanDetails.name + '_' + existingCountries[batsmanDetails.country] + '_' + batsmanDetails.birthDate],
+                            runs: score.runs,
+                            balls: score.balls,
+                            fours: score.fours,
+                            sixes: score.sixes,
+                            innings: score.innings,
+                            teamInnings: score.teamInnings
+                        };
+
+                        if (score.dismissalMode) {
+                            scoreObject.dismissalMode = dismissalModes[score.dismissalMode];
+
+                            if (score.bowler) {
+                                const bowler = getPlayer(score.bowler, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
+                                const bowlerDetails = await getPlayerDetailsFromURL(bowler.link);
+                                scoreObject.bowlerId = existingPlayers[bowlerDetails.name + '_' + existingCountries[bowlerDetails.country] + '_' + bowlerDetails.birthDate];
+
+                                if ('undefined' === typeof scoreObject.bowlerId) {
+                                    console.log(score.bowler);
+                                    console.log(bowler);
+                                    console.log(bowlerDetails.name + '_' + existingCountries[bowlerDetails.country] + '_' + bowlerDetails.birthDate);
+                                }
+                            }
+
+                            if (score.fielders) {
+                                let fielders = [];
+                                const fieldersString = score.fielders;
+                                const fielderParts = fieldersString.split(', ');
+                                for (let fielderName of fielderParts) {
+                                    if (fielderName.match(/sub \((.*)\)/)) {
+                                        // console.log(fieldersString);
+                                        fielderName = 'sub';
+                                    }
+
+                                    const fielder = getPlayer(fielderName, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
+                                    const fielderDetails = await getPlayerDetailsFromURL(fielder.link);
+                                    const fielderId = existingPlayers[fielderDetails.name + '_' + existingCountries[fielderDetails.country] + '_' + fielderDetails.birthDate];
+                                    fielders.push(fielderId);
+                                    if ('undefined' === typeof fielderId) {
+                                        console.log(fielderName);
+                                        console.log(fielder);
+                                        console.log(fielderDetails.name + '_' + existingCountries[fielderDetails.country] + '_' + fielderDetails.birthDate);
+                                    }
+                                }
+
+                                scoreObject.fielders = fielders.join(', ');
+                            }
+                        }
+
+                        battingScores.push(scoreObject);
+                    }
+                }
+                payload.battingScores = battingScores;
+
+                let bowlingFigures = [];
+                if (details.hasOwnProperty('bowlingFigures')) {
+                    for (const figure of details.bowlingFigures) {
+                        const bowlerDetails = await getPlayerDetailsFromURL(figure.playerLink);
+                        bowlingFigures.push({
+                            playerId: existingPlayers[bowlerDetails.name + '_' + existingCountries[bowlerDetails.country] + '_' + bowlerDetails.birthDate],
+                            balls: await getBallsFromOversText(figure.oversText, details.startTime, details.stadiumURL),
+                            maidens: figure.maidens,
+                            runs: figure.runs,
+                            wickets: figure.wickets,
+                            innings: figure.innings,
+                            teamInnings: figure.teamInnings
+                        });
+                    }
+                }
+
+                payload.bowlingFigures = bowlingFigures;
+
+                let manOfTheMatchList = [];
+                if (details.hasOwnProperty('manOfTheMatchList')) {
+                    for (const player of details.manOfTheMatchList) {
+                        const playerDetails = await getPlayerDetailsFromURL(player.link);
+                        manOfTheMatchList.push(existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate]);
+                    }
+                }
+
+                payload.manOfTheMatchList = manOfTheMatchList;
+
+                // console.log(JSON.stringify(payload, null, ' '));
+
+                const url = endpoint + '/cricbuzz/matches';
+                const response = await post(url, payload);
+                let isDeleteRequired = false;
+                if (response.status === 200) {
                     isDeleteRequired = true;
                 } else {
-                    errors.push({
-                        payload,
-                        status: response.status,
-                        response: response.result,
-                        type: 'IMPORT_MATCH'
-                    });
+                    const result = response.result;
+                    const errorCode = result.code;
+                    if (errorCode === 4004) {
+                        isDeleteRequired = true;
+                    } else {
+                        errors.push({
+                            payload,
+                            status: response.status,
+                            response: response.result,
+                            type: 'IMPORT_MATCH'
+                        });
+                    }
                 }
-            }
 
-            if (isDeleteRequired) {
-                try {
-                    fs.unlinkSync(path.resolve(__dirname, '../data/inputMatches/' + referenceTourId + '/' + referenceMatchId + '.json'))
-                    //file removed
-                } catch(err) {
-                    console.error("Error while removing matchfile: " + err)
+                if (isDeleteRequired) {
+                    try {
+                        fs.unlinkSync(path.resolve(__dirname, '../data/inputMatches/' + referenceTourId + '/' + referenceMatchId + '.json'))
+                        //file removed
+                    } catch(err) {
+                        console.error("Error while removing matchfile: " + err)
+                    }
                 }
             }
         }
@@ -738,35 +745,40 @@ const importCountriesFromPlayers = async (players, existingCountries, errors) =>
 
             console.log('\tProcessing match. [' + (matchIndex + 1) + '/' + matches.length + ']');
 
-            const matchId = matchFile.replace('.json', '');
+            try {
+                const matchId = matchFile.replace('.json', '');
 
-            const matchFilePath = tourDir + '/' + matchFile;
-            const details = JSON.parse(fs.readFileSync(matchFilePath));
+                const matchFilePath = tourDir + '/' + matchFile;
+                const details = JSON.parse(fs.readFileSync(matchFilePath));
 
-            await importCountries(details, existingCountries, errors);
-            // console.log(existingCountries);
+                await importCountries(details, existingCountries, errors);
+                // console.log(existingCountries);
 
-            await importStadium(details.stadiumURL, existingCountries, existingStadiums, errors);
-            // console.log(existingStadiums);
+                await importStadium(details.stadiumURL, existingCountries, existingStadiums, errors);
+                // console.log(existingStadiums);
 
-            await importTeams(details, existingTeams, teamReplacements, errors);
-            // console.log(existingTeams);
+                await importTeams(details, existingTeams, teamReplacements, errors);
+                // console.log(existingTeams);
 
-            await importPlayers(details, existingCountries, existingPlayers, errors);
-            // console.log(existingPlayers);
+                await importPlayers(details, existingCountries, existingPlayers, errors);
+                // console.log(existingPlayers);
 
-            await importTour(details, existingTours, yearTours, errors);
-            // console.log(existingTours);
+                await importTour(details, existingTours, yearTours, errors);
+                // console.log(existingTours);
 
-            await importSeries(details, existingTours, existingSeries, existingTeams, teamReplacements, errors);
+                await importSeries(details, existingTours, existingSeries, existingTeams, teamReplacements, errors);
 
-            await importMatch(details, existingSeries, teamReplacements, playerReplacements, dismissalModes, existingTeams, existingStadiums, existingCountries, existingPlayers, errors, tourId, matchId);
+                await importMatch(details, existingSeries, teamReplacements, playerReplacements, dismissalModes, existingTeams, existingStadiums, existingCountries, existingPlayers, errors, tourId, matchId);
 
-            fs.writeFile(errorFilePath, JSON.stringify(errors, null, '  '), error => {
-                if (error) {
-                    console.log("\t\tError while writing match data. Error: " + error);
-                }
-            });
+                fs.writeFile(errorFilePath, JSON.stringify(errors, null, '  '), error => {
+                    if (error) {
+                        console.log("\t\tError while writing match data. Error: " + error);
+                    }
+                });
+            } catch (e) {
+                console.log('\t\tError while importing match. ' + e);
+            }
+            
 
             console.log('\tProcessed match. [' + (matchIndex + 1) + '/' + matches.length + ']');
             matchIndex++;
