@@ -53,7 +53,8 @@ const getMatchesWithMissingBattingScores = () => {
                             gameType: details.gameType,
                             matchId,
                             matchName: details.name,
-                            result: details.result
+                            result: details.result,
+                            matchLink: details.matchLink
                         }
                     );
                 }

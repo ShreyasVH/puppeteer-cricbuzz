@@ -1,7 +1,9 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 const getPlayer = require('./utils').getPlayer;
+const correctTeam = require('./utils').correctTeam;
 
 const baseDirectory = 'data/matches';
 
@@ -12,8 +14,12 @@ let matchesWithMissingPlayers = [];
 let unknownPlayers = {};
 let ambiguousPlayers = [];
 let missedTexts = [];
+let dismissals = [];
+let dismissalMap = [];
+let allDismissalMaps = {};
 
 const playerReplacements = JSON.parse(fs.readFileSync('data/playerReplacements.json'));
+const teamReplacements = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../data/teamReplacements.json')));
 
 let tourIndex = 1;
 for (const tour of tours) {
@@ -26,14 +32,15 @@ for (const tour of tours) {
 
     const matches = fs.readdirSync(tourFolder);
     let mIndex = 1;
-    let playersForAmbiguity = {};
     for (const match of matches) {
+        let playersForAmbiguity = {};
         if (mIndex > 1) {
             // break;
             console.log('\t....................................');
         }
 
         console.log('\tProcessing match. [' + mIndex + '/' + matches.length + ']');
+        let matchDismissalMap = {};
 
         const matchFile = tourFolder + '/' + match;
         let details = {};
@@ -49,8 +56,8 @@ for (const tour of tours) {
                             // break;
                         }
 
-                        const battingTeam = score.team;
-                        const bowlingTeam = ((battingTeam === details.team1) ? details.team2 : ((battingTeam === details.team2) ? details.team1 : ''));
+                        let battingTeam = correctTeam(score.team, teamReplacements);
+                        let bowlingTeam = ((battingTeam === correctTeam(details.team1, teamReplacements)) ? correctTeam(details.team2, teamReplacements) : ((battingTeam === correctTeam(details.team2, teamReplacements)) ? correctTeam(details.team1, teamReplacements) : ''));
 
                         let detailsForLogging = {
                             matchLink: details.matchLink,
@@ -68,19 +75,20 @@ for (const tour of tours) {
                             if (fieldersString.match(/sub/)) {
                                 // console.log(fieldersString);
                             }
-                            if (fieldersString.match(/sub \((.*)\)/)) {
-                                // console.log(fieldersString);
-                                fieldersString = 'sub';
-                            }
 
-                            if ('sub' !== fieldersString) {
-                                if (fieldersString.match(/sub/)) {
-                                    missedTexts.push(fieldersString);
+                            let fielders = fieldersString.split(', ');
+                            for (let fielder of fielders) {
+                                if (fielder.match(/sub \((.*)\)|sub \[(.*)]|\(sub\)/)) {
+                                    // console.log(fieldersString);
+                                    fielder = 'sub';
                                 }
 
-                                let fielders = fieldersString.split(', ');
-                                for (let fielder of fielders) {
-                                    let playerResponse = getPlayer(fielder, bowlingTeam, details.players, playerReplacements);
+                                if ('sub' !== fielder) {
+                                    if (fielder.match(/sub/)) {
+                                        missedTexts.push(fieldersString);
+                                    }
+
+                                    let playerResponse = getPlayer(fielder, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
                                     let name = playerResponse.name;
                                     if (name) {
                                         corrections[fielder] = name;
@@ -88,32 +96,66 @@ for (const tour of tours) {
                                         if (playerResponse.options) {
                                             playersForAmbiguity[fielder] = playerResponse.options;
                                         } else {
-                                            if (!unknownPlayers.hasOwnProperty(fielder)) {
-                                                unknownPlayers[fielder] = detailsForLogging;
+                                            if (unknownPlayers.hasOwnProperty(fielder)) {
+                                                unknownPlayers[fielder].push(detailsForLogging);
+                                            } else {
+                                                unknownPlayers[fielder] = [
+                                                    detailsForLogging
+                                                ];
                                             }
                                         }
                                     }
                                 }
                             }
+                        }
 
-                            if (score.bowler) {
-                                let playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, playerReplacements);
-                                let name = playerResponse.name;
-                                if (name) {
-                                    corrections[score.bowler] = name;
+                        if (score.bowler) {
+                            let playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
+                            let name = playerResponse.name;
+                            if (name) {
+                                corrections[score.bowler] = name;
+                            } else {
+                                if (playerResponse.options) {
+                                    playersForAmbiguity[score.bowler] = playerResponse.options;
                                 } else {
-                                    if (playerResponse.options) {
-                                        playersForAmbiguity[score.bowler] = playerResponse.options;
+                                    if (unknownPlayers.hasOwnProperty(score.bowler)) {
+                                        unknownPlayers[score.bowler].push(detailsForLogging);
                                     } else {
-                                        if (!unknownPlayers.hasOwnProperty(score.bowler)) {
-                                            unknownPlayers[score.bowler] = detailsForLogging;
-                                        }
+                                        unknownPlayers[score.bowler] = [
+                                            detailsForLogging
+                                        ];
                                     }
                                 }
                             }
-
-                            sIndex++;
                         }
+
+                        if ((null === score.dismissalMode) && (!score.dismissalModeText.toLowerCase().match(/not out|absent hurt|absent ill|abs hurt|retd out/))) {
+                            dismissals.push({
+                                text: score.dismissalModeText,
+                                mode: score.dismissalMode,
+                                tour,
+                                match
+                            });
+                        }
+
+                        if (null !== score.dismissalMode) {
+                            if (matchDismissalMap.hasOwnProperty(score.dismissalMode)) {
+                                matchDismissalMap[score.dismissalMode].push(score.dismissalModeText);
+                            } else {
+                                matchDismissalMap[score.dismissalMode] = [
+                                    score.dismissalModeText
+                                ];
+                            }
+
+                            if (allDismissalMaps.hasOwnProperty(score.dismissalMode)) {
+                                allDismissalMaps[score.dismissalMode].push(score.dismissalModeText);
+                            } else {
+                                allDismissalMaps[score.dismissalMode] = [
+                                    score.dismissalModeText
+                                ];
+                            }
+                        }
+                        sIndex++;
                     }
                 } else {
                     matchesWithMissingPlayers.push({
@@ -142,6 +184,15 @@ for (const tour of tours) {
                 matchName: details.name
             });
         }
+
+        if (Object.keys(matchDismissalMap).length > 0) {
+            dismissalMap.push({
+                tour,
+                match,
+                dismissalMap: matchDismissalMap
+            });
+        }
+
         mIndex++;
     }
 
@@ -154,7 +205,6 @@ fs.writeFile('data/playerCorrections.json', JSON.stringify(corrections, null, ' 
         console.log("\t\tError while writing corrections data. Error: " + error + "");
     }
 });
-
 fs.writeFile('data/unknownPlayers.json', JSON.stringify(unknownPlayers, null, '  '), error => {
     if (error) {
         console.log("\t\tError while writing unknown players data. Error: " + error + "");
@@ -179,4 +229,20 @@ fs.writeFile('data/matchesWithMissingPlayers.json', JSON.stringify(matchesWithMi
     }
 });
 
+fs.writeFile('data/dismissals.json', JSON.stringify(dismissals, null, '  '), error => {
+    if (error) {
+        console.log("\t\tError while writing missing dismissals data. Error: " + error + "");
+    }
+});
 
+fs.writeFile('data/dismissalMaps.json', JSON.stringify(dismissalMap, null, '  '), error => {
+    if (error) {
+        console.log("\t\tError while writing dismissal map. Error: " + error + "");
+    }
+});
+
+fs.writeFile('data/allDismissalMaps.json', JSON.stringify(allDismissalMaps, null, '  '), error => {
+    if (error) {
+        console.log("\t\tError while writing all dismissal maps. Error: " + error + "");
+    }
+});

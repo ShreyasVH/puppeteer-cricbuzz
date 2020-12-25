@@ -2,6 +2,8 @@
 
 const fs = require('fs');
 
+const getMatchIdFromLink = require('./utils').getMatchIdFromLink;
+
 (async() => {
     const baseDirectory = 'data/matches';
 
@@ -28,7 +30,7 @@ const fs = require('fs');
                 matchStartTimeMap[gameType] = {};
 
                 for (const match of matchList.matches) {
-                    matchStartTimeMap[gameType][match.name] = match.startTime;
+                    matchStartTimeMap[gameType][getMatchIdFromLink(match.link)] = match.startTime;
                 }
             }
         }
@@ -55,7 +57,7 @@ const fs = require('fs');
                 const name = details.name;
                 const gameType = details.gameType;
                 if (matchStartTimeMap.hasOwnProperty(gameType) && matchStartTimeMap[gameType].hasOwnProperty(name)) {
-                    if (details.startTime !== matchStartTimeMap[gameType][name]) {
+                    if (details.startTime !== matchStartTimeMap[gameType][getMatchIdFromLink(details.matchLink)]) {
                         const startTime = matchStartTimeMap[gameType][name];
                         details.startTimeOriginal = details.startTime;
                         details.startTime = startTime;

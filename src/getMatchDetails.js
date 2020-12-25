@@ -62,7 +62,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
             titleText = titleText.replace('1st ', '').replace('2nd ', '');
             const teamMatches = titleText.match(/(.*) Innings/);
             const battingTeam = correctTeam(teamMatches[1]);
-            const bowlingTeam = ((battingTeam === team1) ? team2 : ((battingTeam === team2) ? team1 : ''));
+            const bowlingTeam = ((battingTeam === correctTeam(team1)) ? correctTeam(team2) : ((battingTeam === correctTeam(team2)) ? correctTeam(team1) : ''));
 
             const tables = inningsDiv.querySelectorAll('.cb-col.cb-col-100.cb-ltst-wgt-hdr');
 
@@ -132,7 +132,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                                 oversText,
                                 innings: inning
                             };
-                        } else if (row.innerText.toLowerCase().indexOf('did not bat') !== -1) {
+                        } else if (row.innerText.toLowerCase().match('did not bat|yet to bat')) {
 
                         } else {
                             let score = {};
@@ -156,13 +156,13 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                             const caughtAndBowledRegex = /(c & b|c and b|c&b) (.*)/;
                             const caughtRegex = /^c (.*) b (.*)$/;
                             const lbwRegex = /^lbw b (.*)$/;
-                            const runOutRegex = /^run out (.*)$/;
+                            const runOutRegex = /^run out(.*)$/;
                             const stumpedRegex = /^st (.*) b (.*)$/;
                             const hitTwiceRegex = /hit twice/;
-                            const hitWicketRegex = /^hit wicket b (.*)|hit wkt b (.*)$/;
-                            const obstructedRegex = /obs/;
+                            const hitWicketRegex = /^(hit wicket|hit wkt) b (.*)$/;
+                            const obstructedRegex = /^obs|obstructing the field$/;
                             const timedOutRegex = /timed out/;
-                            const retiredHurtRegex = /retd hurt/;
+                            const retiredHurtRegex = /retd hurt|retired hurt|retired ill|retired out/;
                             const handledRegex = /handled the ball/;
 
                             if (dismissalModeText.match(/not out/)) {
@@ -180,7 +180,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                             } else if(dismissalModeText.match(hitWicketRegex)) {
                                 dismissalMode = 'Hit Wicket';
                                 let matches = dismissalModeText.match(hitWicketRegex);
-                                bowler = matches[1];
+                                bowler = matches[2];
                             } else if(dismissalModeText.match(handledRegex)) {
                                 dismissalMode = 'Handled the Ball';
                             } else if(dismissalModeText.match(retiredHurtRegex)) {
@@ -401,12 +401,12 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
 
                 index++;
             }
-
-            details.players = players;
-            details.bench = bench;
-            details.captains = captains;
-            details.wicketKeepers = wicketKeepers;
         }
+
+        details.players = players;
+        details.bench = bench;
+        details.captains = captains;
+        details.wicketKeepers = wicketKeepers;
 
         let matchInfoElements = document.querySelectorAll('.cb-mtch-info-itm');
         for (let matchInfoElement of matchInfoElements) {
@@ -457,7 +457,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
         resultText = resultTextParts[resultTextParts.length - 1];
         details.resultText = resultText;
         if (resultText.indexOf(' won ') !== -1) {
-            if (resultText.match(/super|Super|eliminator/)) {
+            if (resultText.match(/super over|Super Over|eliminator/)) {
                 let matches = resultText.match(/\((.*) won (.*)/);
                 let winner = correctTeam(matches[1]);
                 details.winner = winner;

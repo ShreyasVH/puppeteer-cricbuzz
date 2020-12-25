@@ -5,6 +5,7 @@ const fs = require('fs');
 
 const getPlayerIdFromLink = require('./utils').getPlayerIdFromLink;
 const getPlayer = require('./utils').getPlayer;
+const correctTeam = require('./utils').correctTeam;
 const getBallsFromOversText = require('./utils').getBallsFromOversText;
 
 const path = require('path');
@@ -121,7 +122,7 @@ const verifyBalls = async details => {
     return errors;
 };
 
-const verifyWickets = (details, playerReplacements) => {
+const verifyWickets = (details, playerReplacements, teamReplacements) => {
     let errors = [];
 
     let inningsWicketMap = {};
@@ -144,10 +145,10 @@ const verifyWickets = (details, playerReplacements) => {
     let inningsWicketMapAggregate = {};
     if (details.battingScores && details.players) {
         for (const score of details.battingScores) {
-            const battingTeam = score.team;
-            const bowlingTeam = ((battingTeam === details.team1) ? details.team2 : ((battingTeam === details.team2) ? details.team1 : ''));
+            const battingTeam = correctTeam(score.team, teamReplacements);
+            const bowlingTeam = ((battingTeam === correctTeam(details.team1, teamReplacements)) ? correctTeam(details.team2, teamReplacements) : ((battingTeam === correctTeam(details.team2, teamReplacements)) ? correctTeam(details.team1, teamReplacements) : ''));
             if (score.bowler) {
-                const playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, playerReplacements);
+                const playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
                 if (playerResponse.link) {
                     let playerId = getPlayerIdFromLink(playerResponse.link);
                     if (playerId) {
@@ -193,11 +194,12 @@ const verifyMatchDetails = async (details) => {
     let errors = [];
 
     const playerReplacements = JSON.parse(fs.readFileSync('data/playerReplacements.json'));
+    const teamReplacements = JSON.parse(fs.readFileSync('data/teamReplacements.json'));
 
     errors = errors.concat(verifyTotals(details));
     errors = errors.concat(verifyExtras(details));
     errors = errors.concat(await verifyBalls(details));
-    errors = errors.concat(verifyWickets(details, playerReplacements));
+    errors = errors.concat(verifyWickets(details, playerReplacements, teamReplacements));
 
     return errors;
 };
@@ -207,6 +209,6 @@ exports.verifyMatchDetails = verifyMatchDetails;
 if (fileName === scriptName) {
     (async() => {
         // const playerId = process.argv[2];
-        // const playerDetails = await gePlayerDetails(playerId);
+        // const playerDetails = await getPlayerDetails(playerId);
     })();
 }

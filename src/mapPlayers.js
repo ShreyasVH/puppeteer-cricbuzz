@@ -14,6 +14,7 @@ let ambiguousPlayers = [];
 let missedTexts = [];
 
 const playerReplacements = JSON.parse(fs.readFileSync('data/playerReplacements.json'));
+const teamReplacements = JSON.parse(fs.readFileSync('data/teamReplacements.json'));
 
 let tourIndex = 1;
 for (const tour of tours) {
@@ -80,7 +81,7 @@ for (const tour of tours) {
 
                                 let fielders = fieldersString.split(', ');
                                 for (let fielder of fielders) {
-                                    let playerResponse = getPlayer(fielder, bowlingTeam, details.players, playerReplacements);
+                                    let playerResponse = getPlayer(fielder, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
                                     let name = playerResponse.name;
                                     if (name) {
                                         corrections[fielder] = name;
@@ -97,7 +98,7 @@ for (const tour of tours) {
                             }
 
                             if (score.bowler) {
-                                let playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, playerReplacements);
+                                let playerResponse = getPlayer(score.bowler, bowlingTeam, details.players, details.bench, playerReplacements, teamReplacements);
                                 let name = playerResponse.name;
                                 if (name) {
                                     corrections[score.bowler] = name;
