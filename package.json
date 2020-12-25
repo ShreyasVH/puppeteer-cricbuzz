@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "axios": "^0.20.0",
     "fs": "0.0.1-security",
+    "googleapis": "^39.2.0",
     "minimist": ">=0.2.1",
     "puppeteer": "^2.1.1"
   }
