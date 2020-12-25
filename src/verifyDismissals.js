@@ -96,8 +96,12 @@ for (const tour of tours) {
                                         if (playerResponse.options) {
                                             playersForAmbiguity[fielder] = playerResponse.options;
                                         } else {
-                                            if (!unknownPlayers.hasOwnProperty(fielder)) {
-                                                unknownPlayers[fielder] = detailsForLogging;
+                                            if (unknownPlayers.hasOwnProperty(fielder)) {
+                                                unknownPlayers[fielder].push(detailsForLogging);
+                                            } else {
+                                                unknownPlayers[fielder] = [
+                                                    detailsForLogging
+                                                ];
                                             }
                                         }
                                     }
@@ -114,8 +118,12 @@ for (const tour of tours) {
                                 if (playerResponse.options) {
                                     playersForAmbiguity[score.bowler] = playerResponse.options;
                                 } else {
-                                    if (!unknownPlayers.hasOwnProperty(score.bowler)) {
-                                        unknownPlayers[score.bowler] = detailsForLogging;
+                                    if (unknownPlayers.hasOwnProperty(score.bowler)) {
+                                        unknownPlayers[score.bowler].push(detailsForLogging);
+                                    } else {
+                                        unknownPlayers[score.bowler] = [
+                                            detailsForLogging
+                                        ];
                                     }
                                 }
                             }
