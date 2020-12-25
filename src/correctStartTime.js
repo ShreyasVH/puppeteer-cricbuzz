@@ -54,11 +54,11 @@ const getMatchIdFromLink = require('./utils').getMatchIdFromLink;
 
             try {
                 let details = JSON.parse(fs.readFileSync(matchFilePath));
-                const name = details.name;
                 const gameType = details.gameType;
-                if (matchStartTimeMap.hasOwnProperty(gameType) && matchStartTimeMap[gameType].hasOwnProperty(name)) {
-                    if (details.startTime !== matchStartTimeMap[gameType][getMatchIdFromLink(details.matchLink)]) {
-                        const startTime = matchStartTimeMap[gameType][name];
+                const mId = getMatchIdFromLink(details.matchLink);
+                if (matchStartTimeMap.hasOwnProperty(gameType) && matchStartTimeMap[gameType].hasOwnProperty(mId)) {
+                    if (details.startTime !== matchStartTimeMap[gameType][mId]) {
+                        const startTime = matchStartTimeMap[gameType][mId];
                         details.startTimeOriginal = details.startTime;
                         details.startTime = startTime;
                         details.startTimeString = (new Date(startTime)).toLocaleDateString('en-GB');
