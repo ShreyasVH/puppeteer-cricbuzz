@@ -7,6 +7,7 @@ const getPlayerIdFromLink = require('./utils').getPlayerIdFromLink;
 const getTourIdFromLink = require('./utils').getTourIdFromLink;
 const getMatchIdFromLink = require('./utils').getMatchIdFromLink;
 const getGameType = require('./utils').getGameType;
+const isGameCompleted = require('./utils').isGameCompleted;
 
 
 const path = require('path');
@@ -15,10 +16,12 @@ const scriptName = path.basename(__filename);
 const fileNameParts = process.argv[1].split('\/');
 const fileName = fileNameParts[fileNameParts.length - 1];
 
-const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGameTypeDef) => {
+const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGameTypeDef, isGameCompletedDef) => {
     const getPlayerIdFromLink = new Function(' return (' + getPlayerIdFromLinkDef + ').apply(null, arguments)');
 
     const getGameType = new Function(' return (' + getGameTypeDef + ').apply(null, arguments)');
+
+    const isGameCompleted = new Function(' return (' + isGameCompletedDef + ').apply(null, arguments)');
 
     const extrasMapping = {
         b: 'BYE',
@@ -293,6 +296,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
         let gameType;
 
         const tourNameElement = document.querySelector('.cb-nav-subhdr a span');
+        debugger;
         if (tourNameElement) {
             details.tourNameText = tourNameElement.innerText;
             tourName = tourNameElement.innerText.trim().replace(/\//g, '-');
@@ -313,6 +317,16 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
 
             gameType = getGameType.call(null, matchName, tourName);
         }
+
+        const timeTextElement = document.querySelector('[itemprop="startDate"]');
+        if (timeTextElement) {
+            details.startTimeText = timeTextElement.innerText;
+
+            if (!isGameCompleted.call(null, details.startTimeText, gameType)) {
+                return {};
+            }
+        }
+
         details.team1 = team1;
         details.team2 = team2;
         details.name = matchName;
@@ -506,11 +520,6 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
             details.year = year;
         }
 
-        const timeTextElement = document.querySelector('[itemprop="startDate"]');
-        if (timeTextElement) {
-            details.startTimeText = timeTextElement.innerText;
-        }
-
         const stadiumElement = document.querySelector('a[itemprop="location"]');
         details.stadiumURL = stadiumElement.href;
 
@@ -581,7 +590,7 @@ const getMatchDetails = async (matchUrl) => {
             teamReplacements = JSON.parse(fs.readFileSync(teamReplacementsFilePath));
         }
 
-        details = await page.evaluate(getMatchDetailsFromHTML, teamReplacements, getPlayerIdFromLink.toString(), getGameType.toString());
+        details = await page.evaluate(getMatchDetailsFromHTML, teamReplacements, getPlayerIdFromLink.toString(), getGameType.toString(), isGameCompleted.toString());
         await page.close();
 
         if (Object.keys(details).length > 0) {

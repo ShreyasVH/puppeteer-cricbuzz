@@ -5,6 +5,7 @@ const fs = require('fs');
 const verifyMatchDetails = require('./verifyMatchDetails').verifyMatchDetails;
 const getMatchIdFromLink = require('./utils').getMatchIdFromLink;
 const getTourIdFromLink = require('./utils').getTourIdFromLink;
+const isGameCompleted = require('./utils').isGameCompleted;
 
 const tourDetailsDirectory = 'data/tourDetails';
 let tourDetailsList = fs.readdirSync(tourDetailsDirectory);
@@ -54,31 +55,33 @@ let errorData = [];
                             try {
                                 const details = JSON.parse(fs.readFileSync(matchFile));
 
-                                console.log('\t\t\t\tVerifying match details');
-                                let errors = await verifyMatchDetails(details);
-                                // console.log(JSON.stringify(errors));
-                                const errorDataFile = 'data/matchErrors.json';
+                                if (isGameCompleted(details.startTime, details.gameType)) {
+                                    console.log('\t\t\t\tVerifying match details');
+                                    let errors = await verifyMatchDetails(details);
+                                    // console.log(JSON.stringify(errors));
+                                    const errorDataFile = 'data/matchErrors.json';
 
-                                if(errors.length > 0) {
-                                    errorData.push({
-                                        tourId,
-                                        tourName: tourDetails.name,
-                                        tourLink: tourDetails.tourLink,
-                                        gameType,
-                                        matchId,
-                                        matchName: match.name,
-                                        matchLink: match.link,
-                                        errors
-                                    });
-                                }
-
-                                fs.writeFileSync(errorDataFile, JSON.stringify(errorData, null, '  '), error => {
-                                    if (error) {
-                                        console.log("\t\tError while writing match errors. Error: " + error);
+                                    if(errors.length > 0) {
+                                        errorData.push({
+                                            tourId,
+                                            tourName: tourDetails.name,
+                                            tourLink: tourDetails.tourLink,
+                                            gameType,
+                                            matchId,
+                                            matchName: match.name,
+                                            matchLink: match.link,
+                                            errors
+                                        });
                                     }
-                                });
 
-                                console.log('\t\t\t\tVerified match details');
+                                    fs.writeFileSync(errorDataFile, JSON.stringify(errorData, null, '  '), error => {
+                                        if (error) {
+                                            console.log("\t\tError while writing match errors. Error: " + error);
+                                        }
+                                    });
+
+                                    console.log('\t\t\t\tVerified match details');
+                                }
                             } catch (e) {
                                 console.log("Error while getting match details. Error: " + e + "");
                             }

@@ -382,6 +382,24 @@ const correctTeam = (team, teamReplacements) => {
     return output;
 };
 
+const isGameCompleted = (startTime, gameType) => {
+    let isCompleted = false;
+    const now = new Date();
+    switch (gameType) {
+        case 'ODI':
+            isCompleted = ((startTime + (8 * 3600 * 1000)) <= now.getTime());
+            break;
+        case 'TEST':
+            isCompleted = ((startTime + ((4 * 24 * 3600 * 1000) + (7 * 3600 * 1000))) <= now.getTime());
+            break;
+        case 'T20':
+            isCompleted = ((startTime + (3 * 3600 * 1000)) <= now.getTime());
+            break;
+    }
+
+    return isCompleted;
+};
+
 exports.getPlayerIdFromLink = getPlayerIdFromLink;
 exports.getStadiumIdFromLink = getStadiumIdFromLink;
 exports.getPlayer = getPlayer;
@@ -391,3 +409,4 @@ exports.getGameType = getGameType;
 exports.getBallsFromOversText = getBallsFromOversText;
 exports.getBallsPerOver = getBallsPerOver;
 exports.correctTeam = correctTeam;
+exports.isGameCompleted = isGameCompleted;
