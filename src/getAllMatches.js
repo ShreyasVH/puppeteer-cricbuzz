@@ -13,6 +13,7 @@ if (process.argv.length >= 4) {
         console.log("Please provide valid start and end year");
     } else {
         (async() => {
+            const currentYear = (new Date()).getFullYear();
             for (let year = start; year <= end; year++) {
                 let details = {};
                 if (year > start) {
@@ -23,7 +24,7 @@ if (process.argv.length >= 4) {
                 try {
                     let tourList = [];
                     const tourListFilePath = 'data/tourLists/' + year + '.json';
-                    if (fs.existsSync(tourListFilePath)) {
+                    if ((year !== currentYear) && fs.existsSync(tourListFilePath)) {
                         tourList = JSON.parse(fs.readFileSync(tourListFilePath));
                     } else {
                         tourList = await getTourList(year);
