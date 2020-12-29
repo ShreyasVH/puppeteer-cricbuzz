@@ -38,9 +38,16 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
 
     teamName = correctTeam(teamName, teamReplacements);
 
+    let playerNames = [];
+    for (const playerObject of players) {
+        if (teamName === correctTeam(playerObject.team, teamReplacements)) {
+            playerNames.push(playerObject.player);
+        }
+    }
+
     // console.log(JSON.stringify(players, null, ' '));
 
-    if (!isRecursive && playerReplacements.hasOwnProperty(name)) {
+    if (!isRecursive && playerReplacements.hasOwnProperty(name) && ((playerNames.indexOf(playerReplacements[name])) !== -1)) {
         name = playerReplacements[name];
     }
     // console.log(JSON.stringify(playerReplacements));
