@@ -296,7 +296,6 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
         let gameType;
 
         const tourNameElement = document.querySelector('.cb-nav-subhdr a span');
-        debugger;
         if (tourNameElement) {
             details.tourNameText = tourNameElement.innerText;
             tourName = tourNameElement.innerText.trim().replace(/\//g, '-');
@@ -318,13 +317,25 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
             gameType = getGameType.call(null, matchName, tourName);
         }
 
+        debugger;
         const timeTextElement = document.querySelector('[itemprop="startDate"]');
         if (timeTextElement) {
             details.startTimeText = timeTextElement.innerText;
+        }
 
-            if (!isGameCompleted.call(null, details.startTimeText, gameType)) {
+        const timeElement = document.querySelector('.schedule-date');
+        if (timeElement) {
+            let startTime = parseFloat(timeElement.getAttribute('timestamp'));
+
+            if (!isGameCompleted.call(null, startTime, gameType)) {
                 return {};
             }
+
+            details.startTime = startTime;
+            details.startTimeString = (new Date(startTime)).toLocaleDateString('en-GB');
+            let year = new Date(startTime).getFullYear();
+            // console.log(year);
+            details.year = year;
         }
 
         details.team1 = team1;
@@ -508,16 +519,6 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
             details.result = 'DRAW';
         } else {
             details.result = 'WASHED_OUT';
-        }
-
-        const timeElement = document.querySelector('.schedule-date');
-        if (timeElement) {
-            let startTime = parseFloat(timeElement.getAttribute('timestamp'));
-            details.startTime = startTime;
-            details.startTimeString = (new Date(startTime)).toLocaleDateString('en-GB');
-            let year = new Date(startTime).getFullYear();
-            // console.log(year);
-            details.year = year;
         }
 
         const stadiumElement = document.querySelector('a[itemprop="location"]');

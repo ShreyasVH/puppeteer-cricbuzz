@@ -47,15 +47,15 @@ let errorData = [];
                         console.log('\t\t\t--------------------------');
                     }
                     console.log('\t\t\tProcessing match. [' + mIndex + '/' + matches.length + ']');
-                    const matchId = getMatchIdFromLink(match.link);
-                    if (matchId) {
-                        const tourFolder = 'data/matches/' + tourId;
-                        const matchFile = tourFolder + '/' + matchId + '.json';
-                        if (fs.existsSync(tourFolder) && fs.existsSync(matchFile)) {
-                            try {
-                                const details = JSON.parse(fs.readFileSync(matchFile));
 
-                                if (isGameCompleted(details.startTime, details.gameType)) {
+                    if (isGameCompleted(match.startTime, gameType)) {
+                        const matchId = getMatchIdFromLink(match.link);
+                        if (matchId) {
+                            const tourFolder = 'data/matches/' + tourId;
+                            const matchFile = tourFolder + '/' + matchId + '.json';
+                            if (fs.existsSync(tourFolder) && fs.existsSync(matchFile)) {
+                                try {
+                                    const details = JSON.parse(fs.readFileSync(matchFile));
                                     console.log('\t\t\t\tVerifying match details');
                                     let errors = await verifyMatchDetails(details);
                                     // console.log(JSON.stringify(errors));
@@ -81,20 +81,22 @@ let errorData = [];
                                     });
 
                                     console.log('\t\t\t\tVerified match details');
+                                } catch (e) {
+                                    console.log("Tour: " + tourId);
+                                    console.log("Match: " + matchId);
+                                    console.log("Error while getting match details. Error: " + e + "");
                                 }
-                            } catch (e) {
-                                console.log("Error while getting match details. Error: " + e + "");
+                            } else {
+                                missingMatches.push({
+                                    tourId,
+                                    tourName: tourDetails.name,
+                                    tourLink: tourDetails.tourLink,
+                                    gameType,
+                                    matchId,
+                                    matchName: match.name,
+                                    matchLink: match.link
+                                });
                             }
-                        } else {
-                            missingMatches.push({
-                                tourId,
-                                tourName: tourDetails.name,
-                                tourLink: tourDetails.tourLink,
-                                gameType,
-                                matchId,
-                                matchName: match.name,
-                                matchLink: match.link
-                            });
                         }
                     }
 
@@ -106,10 +108,6 @@ let errorData = [];
                 gIndex++;
             }
         }
-
-
-
-
 
         console.log('\tProcessed tour. [' + tourIndex + '/' + tourDetailsList.length + ']');
         tourIndex++;
