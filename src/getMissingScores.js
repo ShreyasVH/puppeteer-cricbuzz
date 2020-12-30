@@ -4,7 +4,8 @@ const path = require('path');
 const fs = require('fs');
 
 const hPlayerId = process.argv[2];
-const howstatScoresFile = path.resolve(__dirname, '../../puppeteer-howstat/data/scores/ODI/' + hPlayerId + '.csv');
+const gameType = process.argv[3];
+const howstatScoresFile = path.resolve(__dirname, '../../puppeteer-howstat/data/scores/' + gameType + '/' + hPlayerId + '.csv');
 const cricbuzzScoresFile = '/mnt/c/Users/Shreyas/Downloads/batting_scores.csv';
 
 const howstatScores = fs.readFileSync(howstatScoresFile).toString().split("\n");
