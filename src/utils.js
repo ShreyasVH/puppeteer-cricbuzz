@@ -36,6 +36,8 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
         link: ''
     };
 
+    name = name.replace('†', '');
+
     teamName = correctTeam(teamName, teamReplacements);
 
     let playerNames = [];
