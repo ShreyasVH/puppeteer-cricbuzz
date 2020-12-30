@@ -317,7 +317,6 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
             gameType = getGameType.call(null, matchName, tourName);
         }
 
-        debugger;
         const timeTextElement = document.querySelector('[itemprop="startDate"]');
         if (timeTextElement) {
             details.startTimeText = timeTextElement.innerText;
