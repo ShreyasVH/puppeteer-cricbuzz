@@ -36,7 +36,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
         link: ''
     };
 
-    name = name.replace('†', '');
+    name = name.toLowerCase().replace('†', '');
 
     teamName = correctTeam(teamName, teamReplacements);
 
@@ -47,10 +47,10 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
         }
     }
 
-    // console.log(JSON.stringify(players, null, ' '));
+    // console.log(JSON.stringify(playerNames, null, ' '));
 
     if (!isRecursive && playerReplacements.hasOwnProperty(name) && ((playerNames.indexOf(playerReplacements[name])) !== -1)) {
-        name = playerReplacements[name];
+        name = playerReplacements[name].toLowerCase();
     }
     // console.log(JSON.stringify(playerReplacements));
     // console.log(name);
@@ -74,7 +74,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
         }
 
         if (teamName === correctTeam(playerObject.team, teamReplacements)) {
-            const player = playerObject.player;
+            const player = playerObject.player.toLowerCase();
 
             if (player === name) {
                 playerResponse.name = name;
@@ -111,7 +111,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
             }
 
             if (teamName === correctTeam(playerObject.team, teamReplacements)) {
-                const player = playerObject.player;
+                const player = playerObject.player.toLowerCase();
 
                 let nameParts = name.split(' ');
                 let playerParts = player.split(' ');
@@ -141,7 +141,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
             }
 
             if (teamName === correctTeam(playerObject.team, teamReplacements)) {
-                const player = playerObject.player;
+                const player = playerObject.player.toLowerCase();
 
                 let nameParts = name.split(' ');
                 let playerParts = player.split(' ');
@@ -169,7 +169,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
             }
 
             if (teamName === correctTeam(playerObject.team, teamReplacements)) {
-                const player = playerObject.player;
+                const player = playerObject.player.toLowerCase();
 
                 let nameParts = name.split(' ');
                 let playerParts = player.split(' ');
@@ -199,7 +199,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
             }
 
             if (teamName === correctTeam(playerObject.team, teamReplacements)) {
-                const player = playerObject.player;
+                const player = playerObject.player.toLowerCase();
 
                 let nameParts = name.split(' ');
                 let playerParts = player.split(' ');
@@ -229,7 +229,7 @@ const getPlayer = (name, teamName, players, bench, playerReplacements, teamRepla
             }
 
             if (teamName === correctTeam(playerObject.team, teamReplacements)) {
-                const player = playerObject.player;
+                const player = playerObject.player.toLowerCase();
 
                 let nameParts = name.split(' ');
                 let playerParts = player.split(' ');

@@ -149,6 +149,7 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
 
                             const dismissalModeDiv = children[1];
                             const dismissalModeText = dismissalModeDiv.innerText;
+                            const dismissalModeTextLowerCase = dismissalModeText.toLowerCase();
                             score.dismissalModeText = dismissalModeText;
 
                             let dismissalMode = null;
@@ -168,50 +169,50 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
                             const retiredHurtRegex = /retd hurt|retired hurt|retired ill|retired out/;
                             const handledRegex = /handled/;
 
-                            if (dismissalModeText.match(/not out/)) {
+                            if (dismissalModeTextLowerCase.match(/not out|batting/)) {
 
-                            } else if (dismissalModeText.match(lbwRegex)) {
+                            } else if (dismissalModeTextLowerCase.match(lbwRegex)) {
                                 dismissalMode = 'LBW';
-                                let matches = dismissalModeText.match(lbwRegex);
+                                let matches = dismissalModeTextLowerCase.match(lbwRegex);
                                 bowler = matches[1];
-                            } else if(dismissalModeText.match(runOutRegex)) {
+                            } else if(dismissalModeTextLowerCase.toLowerCase().match(runOutRegex)) {
                                 dismissalMode = 'Run Out';
-                                let matches = dismissalModeText.match(runOutRegex);
+                                let matches = dismissalModeTextLowerCase.match(runOutRegex);
                                 let fieldersText = matches[1].replace('(', '').replace(')', '');
                                 let fielderParts = fieldersText.split('/');
                                 fielders = fielderParts.join(', ');
-                            } else if(dismissalModeText.match(hitWicketRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(hitWicketRegex)) {
                                 dismissalMode = 'Hit Wicket';
-                                let matches = dismissalModeText.match(hitWicketRegex);
+                                let matches = dismissalModeTextLowerCase.match(hitWicketRegex);
                                 bowler = matches[2];
-                            } else if(dismissalModeText.match(handledRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(handledRegex)) {
                                 dismissalMode = 'Handled the Ball';
-                            } else if(dismissalModeText.match(retiredHurtRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(retiredHurtRegex)) {
                                 dismissalMode = 'Retired Hurt';
-                            } else if(dismissalModeText.match(stumpedRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(stumpedRegex)) {
                                 dismissalMode = 'Stumped';
-                                let matches = dismissalModeText.match(stumpedRegex);
+                                let matches = dismissalModeTextLowerCase.match(stumpedRegex);
                                 fielders = matches[1];
                                 bowler = matches[2];
-                            } else if(dismissalModeText.match(caughtAndBowledRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(caughtAndBowledRegex)) {
                                 dismissalMode = 'Caught';
-                                let matches = dismissalModeText.match(caughtAndBowledRegex);
+                                let matches = dismissalModeTextLowerCase.match(caughtAndBowledRegex);
                                 fielders = matches[2];
                                 bowler = matches[2];
-                            } else if(dismissalModeText.match(caughtRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(caughtRegex)) {
                                 dismissalMode = 'Caught';
-                                let matches = dismissalModeText.match(caughtRegex);
+                                let matches = dismissalModeTextLowerCase.match(caughtRegex);
                                 fielders = matches[1];
                                 bowler = matches[2];
-                            } else if(dismissalModeText.match(bowledRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(bowledRegex)) {
                                 dismissalMode = 'Bowled';
-                                let matches = dismissalModeText.match(bowledRegex);
+                                let matches = dismissalModeTextLowerCase.match(bowledRegex);
                                 bowler = matches[1];
-                            } else if(dismissalModeText.match(obstructedRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(obstructedRegex)) {
                                 dismissalMode = 'Obstructing the Field';
-                            } else if(dismissalModeText.match(hitTwiceRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(hitTwiceRegex)) {
                                 dismissalMode = 'Hit Twice';
-                            } else if(dismissalModeText.match(timedOutRegex)) {
+                            } else if(dismissalModeTextLowerCase.match(timedOutRegex)) {
                                 dismissalMode = 'Timed Out';
                             }
 
