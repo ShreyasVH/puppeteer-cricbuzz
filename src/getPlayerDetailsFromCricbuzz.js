@@ -163,11 +163,11 @@ const getPlayerDetails = async (playerId) => {
             let playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
             playerCache[playerId] = details;
 
-            fs.writeFile(playerCacheFilePath, JSON.stringify(playerCache, null, '  '), error => {
-                if (error) {
-                    console.log("\n\t\tError while writing player cache. Error: " + error + "\n");
-                }
-            });
+            try {
+                fs.writeFileSync(playerCacheFilePath, JSON.stringify(playerCache, null, '  '));
+            } catch (error) {
+                console.log("\n\t\tError while writing player cache. Error: " + error + "\n");
+            }
         }
 
         await browser.close();
