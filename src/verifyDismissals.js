@@ -129,7 +129,7 @@ for (const tour of tours) {
                             }
                         }
 
-                        if ((null === score.dismissalMode) && (!score.dismissalModeText.toLowerCase().match(/not out|absent hurt|absent ill|abs hurt|retd out/))) {
+                        if ((null === score.dismissalMode) && (!score.dismissalModeText.toLowerCase().match(/not out|absent hurt|absent ill|abs hurt|retd out|batting/))) {
                             dismissals.push({
                                 text: score.dismissalModeText,
                                 mode: score.dismissalMode,
