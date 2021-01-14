@@ -28,7 +28,7 @@ const cricbuzzScoresFile = path.resolve(__dirname, '../data/scores/' + gameType 
 
 con.connect(function(err) {
     if (err) throw err;
-    const sql = 'select bs.runs, FROM_UNIXTIME(m.start_time / 1000, "%d/%m/%Y") as startTime from batting_scores bs inner join matches m on bs.player_id = ' + playerId + ' and m.id = bs.match_id inner join series s on s.id = m.series and s.game_type = ' + gameTypes[gameType] + ' inner join teams t on t.id = bs.team_id and t.team_type_id = 0 order by m.start_time';
+    const sql = 'select bs.runs, FROM_UNIXTIME(m.start_time / 1000, "%d/%m/%Y") as startTime from batting_scores bs inner join matches m on bs.player_id = ' + playerId + ' and m.id = bs.match_id inner join series s on s.id = m.series and s.game_type = ' + gameTypes[gameType] + ' inner join teams t on t.id = bs.team_id and t.team_type_id = 0 order by m.start_time, innings_id';
     con.query(sql, function (err, result) {
         if (err) throw err;
 

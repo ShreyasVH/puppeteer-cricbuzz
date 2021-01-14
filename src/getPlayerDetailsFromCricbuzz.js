@@ -56,6 +56,9 @@ const getPlayerDetailsFromHTML = () => {
                 const inningsDiv = cells[2];
                 const innings = inningsDiv.innerText;
 
+                const notoutsDiv = cells[3];
+                const notOuts = notoutsDiv.innerText;
+
                 const runsDiv = cells[4];
                 const runs = runsDiv.innerText;
 
@@ -74,6 +77,7 @@ const getPlayerDetailsFromHTML = () => {
                 battingStats[gameType] = {
                     matches,
                     innings,
+                    notOuts,
                     runs,
                     balls,
                     highest,
@@ -161,6 +165,7 @@ const getPlayerDetails = async (playerId) => {
             const playerCacheFilePath = 'data/playerCache.json';
 
             let playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
+            details.updated = (new Date()).getTime();
             playerCache[playerId] = details;
 
             try {
