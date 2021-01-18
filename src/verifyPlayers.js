@@ -260,6 +260,7 @@ const getCreatedPlayerDetails = async id => {
             if (mismatchedStats.length > 0) {
                 mismatchedPlayerStats[playerId] = {
                     name: playerDetails.name,
+                    createdPlayerId,
                     mismatchedStats
                 };
             }
