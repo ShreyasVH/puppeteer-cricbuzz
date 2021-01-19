@@ -52,7 +52,7 @@ const getCreatedPlayerDetails = async id => {
     const allPlayers = await getAllPlayers();
     let existingPlayers = {};
     for (const player of allPlayers) {
-        existingPlayers[player.name + '_' + player.country.id + '_' + player.dateOfBirth] = player.id;
+        existingPlayers[player.name + '_' + player.countryId + '_' + player.dateOfBirth] = player.id;
     }
 
     const formattedGameTypes = {

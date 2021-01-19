@@ -695,13 +695,13 @@ const importCountriesFromPlayers = async (players, existingCountries, errors) =>
     const allStadiumsResponse = await getAllStadiums();
     let existingStadiums = {};
     for (const stadium of allStadiumsResponse.result) {
-        existingStadiums[stadium.name + '_' + stadium.country.id] = stadium.id;
+        existingStadiums[stadium.name + '_' + stadium.countryId] = stadium.id;
     }
 
     const allTeamsResponse = await getAllTeams();
     let existingTeams = {};
     for (const team of allTeamsResponse.result) {
-        existingTeams[team.name + '_' + team.country.id + '_' + team.teamType] = team.id;
+        existingTeams[team.name + '_' + team.countryId + '_' + team.teamType] = team.id;
     }
 
     const allSeriesResponse = await getAllSeries();
@@ -716,7 +716,7 @@ const importCountriesFromPlayers = async (players, existingCountries, errors) =>
     const allPlayers = await getAllPlayers();
     let existingPlayers = {};
     for (const player of allPlayers) {
-        existingPlayers[player.name + '_' + player.country.id + '_' + player.dateOfBirth] = player.id;
+        existingPlayers[player.name + '_' + player.countryId + '_' + player.dateOfBirth] = player.id;
     }
 
     let tourIndex = 0;
