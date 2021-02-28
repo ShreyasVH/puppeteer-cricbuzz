@@ -455,8 +455,13 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                         const batsmanDetails = await getPlayerDetailsFromURL(score.playerLink);
 
                         if (['absent hurt', 'absent ill', 'abs hurt', 'retd out'].indexOf(score.dismissalModeText) !== -1) {
-                            console.log(score.dismissalModeText);
-                            continue;
+                            if (score.runs > 0 && score.balls > 0) {
+
+                            } else {
+                                console.log(score.dismissalModeText);
+                                continue;
+                            }
+
                         }
 
                         let battingTeam = correctTeam(score.team, teamReplacements);
