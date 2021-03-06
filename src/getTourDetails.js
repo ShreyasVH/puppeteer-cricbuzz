@@ -36,46 +36,48 @@ const getTourDetailsFromHTML = (getGameTypeDef) => {
             const matchNameDiv = detailsChildren[0];
             const dateDiv = detailsChildren[1];
             const matchNameElement = matchNameDiv.querySelector('a');
-            const matchNameSpan = matchNameElement.querySelector('span');
-            const matchNameParts = matchNameSpan.innerText.split(', ');
-            const teamsText = matchNameParts[0];
-            const matchName = (teamsText + ', ' + matchNameParts[1]).toLowerCase();
-            if (!matchName.match(/Practice|practice|warm|Warm/)) {
-                const gameType = getGameType.call(null, matchName, tourName);
+            if (matchNameElement) {
+                const matchNameSpan = matchNameElement.querySelector('span');
+                const matchNameParts = matchNameSpan.innerText.split(', ');
+                const teamsText = matchNameParts[0];
+                const matchName = (teamsText + ', ' + matchNameParts[1]).toLowerCase();
+                if (!matchName.toLowerCase().match(/practice|warm-up/)) {
+                    const gameType = getGameType.call(null, matchName, tourName);
 
-                if (!series.hasOwnProperty(gameType)) {
-                    series[gameType] = {
-                        matches: [],
-                        startTime: null
-                    };
+                    if (!series.hasOwnProperty(gameType)) {
+                        series[gameType] = {
+                            matches: [],
+                            startTime: null
+                        };
+                    }
+
+                    const startTimeElement = dateDiv.querySelector('span.schedule-date');
+                    let gameStartTime = '';
+                    if (null !== startTimeElement) {
+                        gameStartTime = parseFloat(startTimeElement.getAttribute('timestamp'));
+                        if (null === year) {
+                            year = new Date(gameStartTime).getFullYear();
+                        }
+
+                        if (null === startTime) {
+                            startTime = gameStartTime;
+                        }
+
+                        if (null == series[gameType].startTime) {
+                            series[gameType].startTime = gameStartTime;
+                        }
+                    }
+
+                    let matchLink = matchNameElement.href;
+                    matchLink = matchLink.replace('live-cricket-scores', 'live-cricket-scorecard', matchLink);
+                    matchLink = matchLink.replace('cricket-scores', 'live-cricket-scorecard', matchLink);
+
+                    series[gameType].matches.push({
+                        name: matchName,
+                        link: matchLink,
+                        startTime: gameStartTime
+                    });
                 }
-
-                const startTimeElement = dateDiv.querySelector('span.schedule-date');
-                let gameStartTime = '';
-                if (null !== startTimeElement) {
-                    gameStartTime = parseFloat(startTimeElement.getAttribute('timestamp'));
-                    if (null === year) {
-                        year = new Date(gameStartTime).getFullYear();
-                    }
-
-                    if (null === startTime) {
-                        startTime = gameStartTime;
-                    }
-
-                    if (null == series[gameType].startTime) {
-                        series[gameType].startTime = gameStartTime;
-                    }
-                }
-
-                let matchLink = matchNameElement.href;
-                matchLink = matchLink.replace('live-cricket-scores', 'live-cricket-scorecard', matchLink);
-                matchLink = matchLink.replace('cricket-scores', 'live-cricket-scorecard', matchLink);
-
-                series[gameType].matches.push({
-                    name: matchName,
-                    link: matchLink,
-                    startTime: gameStartTime
-                });
             }
         }
         details.startTime = startTime;
@@ -94,7 +96,7 @@ const getTourDetails = async (tourUrl) => {
     let details = {};
 
     const browser  = await puppeteer.launch({
-        headless: true,
+        headless: false,
         devtools: true,
         args: [
             '--no-sandbox',
