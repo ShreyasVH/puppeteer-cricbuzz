@@ -6,6 +6,7 @@ const getTourDetails = require('./getTourDetails').getTourDetails;
 const getMatchDetails = require('./getMatchDetails').getMatchDetails;
 const getTourIdFromLink = require('./utils').getTourIdFromLink;
 const getMatchIdFromLink = require('./utils').getMatchIdFromLink;
+const isGameCompleted = require('./utils').isGameCompleted;
 
 const path = require('path');
 const scriptName = path.basename(__filename);
@@ -44,17 +45,20 @@ const getMatchesForTour = async (tourUrl) => {
                     }
                     console.log("\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]");
 
-                    const matchId = getMatchIdFromLink(match.link);
-                    if (matchId) {
-                        const matchFilePath = 'data/matches/' + tourId + '/' + matchId + '.json';
-                        if (!fs.existsSync(matchFilePath)) {
-                            await getMatchDetails(match.link);
+                    if (isGameCompleted(match.startTime, gameType)) {
+                        const matchId = getMatchIdFromLink(match.link);
+                        if (matchId) {
+                            const matchFilePath = 'data/matches/' + tourId + '/' + matchId + '.json';
+                            if (!fs.existsSync(matchFilePath)) {
+                                await getMatchDetails(match.link);
+                            }
                         }
+                    } else {
+                        console.log("\t\t\t\tMatch not yet completed");
                     }
 
                     console.log("\t\t\tProcessed match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]");
                     matchIndex++;
-
                 }
 
                 console.log("\t\tProcessed " + gameType + " series [" + seriesIndex + "/" + seriesList.length + "]");
