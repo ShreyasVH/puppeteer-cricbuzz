@@ -51,17 +51,22 @@ con.connect(function(err) {
 
 		while((index1 < howstatFigures.length)) {
 			const hfigure = howstatFigures[index1];
-			const cfigure = cricbuzzFigures[index2];
-			const hfigureParts = hfigure.split(", ");
-			const cfigureParts = cfigure.split(", ");
-			// console.log(hfigure);
-			// console.log(cfigure);
+			if (index2 < cricbuzzFigures.length) {
+				const cfigure = cricbuzzFigures[index2];
+				const hfigureParts = hfigure.split(", ");
+				const cfigureParts = cfigure.split(", ");
+				// console.log(hfigure);
+				// console.log(cfigure);
 
-			if (hfigureParts[0] === cfigureParts[0]) {
-				index2++;
+				if (hfigureParts[0] === cfigureParts[0]) {
+					index2++;
+				} else {
+					console.log(hfigure);
+				}
 			} else {
 				console.log(hfigure);
 			}
+
 			index1++;
 			// console.log(index1);
 			// console.log(index2);
