@@ -152,18 +152,6 @@ const importTeams = async (details, existingTeams, teamReplacements, errors) => 
     }
 }
 
-const formatDateToString = timestamp => {
-    const date = new Date(timestamp);
-    const dateString = date.toLocaleDateString("en-IN", {month: '2-digit', year: 'numeric', day: '2-digit'});
-    const dateParts = dateString.split("/");
-    return dateParts[2] + "-" + dateParts[0] + '-' + dateParts[1];
-}
-
-const formatTimeToString = timestamp => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString();
-}
-
 const importPlayers = async (details, existingCountries, existingPlayers, errors) => {
     let players = details.players;
     players = players.concat(details.bench);
@@ -219,10 +207,6 @@ const getToursForYear = async year => {
     }
     return tours;
 };
-
-const formatDateTimeToString = timestamp => {
-    return formatDateToString(timestamp) + ' ' + formatTimeToString(timestamp);
-}
 
 const importTour = async (details, existingTours, yearTours, errors) => {
     const tourId = getTourIdFromLink(details.tourLink);
