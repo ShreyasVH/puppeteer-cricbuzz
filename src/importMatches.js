@@ -13,6 +13,7 @@ const getPlayer = require('./utils').getPlayer;
 const getPlayerDetails = require('./getPlayerDetailsFromCricbuzz').getPlayerDetails;
 const post = require('./api').post;
 const get = require('./api').get;
+const getDate = require('./utils').getDate;
 
 const endpoint = process.env.CRICBUZZ_ENDPOINT;
 
@@ -171,7 +172,10 @@ const importPlayers = async (details, existingCountries, existingPlayers, errors
             const playerDetails = await getPlayerDetailsFromURL(player.link);
             if (existingCountries.hasOwnProperty(playerDetails.country)) {
                 const countryId = existingCountries[playerDetails.country];
-                const dateOfBirth = playerDetails.birthDate;
+                let dateOfBirth = playerDetails.birthDate;
+                if (dateOfBirth === null) {
+                    dateOfBirth = (getDate(new Date('1970-01-01'))).getTime();
+                }
                 const key = playerDetails.name + '_' + countryId + '_' + dateOfBirth;
                 if (!existingPlayers.hasOwnProperty(key)) {
                     const payload = {
@@ -180,6 +184,8 @@ const importPlayers = async (details, existingCountries, existingPlayers, errors
                         dateOfBirth: dateOfBirth,
                         image: 'https://res.cloudinary.com/dyoxubvbg/image/upload/v1577106216/artists/default_m.jpg'
                     };
+
+                    console.log(payload);
 
                     const url = endpoint + '/cricbuzz/players';
                     const response = await post(url, payload);
@@ -648,6 +654,9 @@ const getPlayerDetailsFromURL = async playerLink => {
         playerDetails = playerCache[playerId];
     } else {
         playerDetails = await getPlayerDetails(playerId);
+    }
+    if (null === playerDetails.birthDate) {
+        playerDetails.birthDate = (getDate(new Date('1970-01-01'))).getTime();
     }
     return playerDetails;
 };
