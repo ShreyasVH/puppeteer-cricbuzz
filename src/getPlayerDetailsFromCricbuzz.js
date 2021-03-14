@@ -36,9 +36,8 @@ const getPlayerDetailsFromHTML = (getDateDef) => {
             }
             if (matches) {
                 const dateOfBirth = getDate.call(null, new Date(matches[1]));
-
                 details.birthDate = dateOfBirth.getTime();
-                details.birthDateString = dateOfBirth.toLocaleDateString('en-GB');
+                details.birthDateString = dateOfBirth.toLocaleDateString('en-GB', {timeZone: 'Asia/Kolkata'});
             }
         }
 
@@ -195,6 +194,6 @@ if (fileName === scriptName) {
     (async() => {
         const playerId = process.argv[2];
         const playerDetails = await getPlayerDetails(playerId);
-        console.log(JSON.stringify(playerDetails, null, ' '));
+        // console.log(JSON.stringify(playerDetails, null, ' '));
     })();
 }

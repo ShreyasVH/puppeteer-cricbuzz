@@ -215,7 +215,7 @@ const importTour = async (details, existingTours, yearTours, errors) => {
         const tourDetails = JSON.parse(fs.readFileSync(tourDetailsFilePath));
         const startTime = tourDetails.startTime;
 
-        const year = ((new Date(startTime)).getFullYear());
+        const year = getDate(new Date()).toLocaleString('en-GB', {timeZone: 'Asia/Kolkata', year: 'numeric'});
         const tourName= details.tourName;
 
         if (!yearTours.hasOwnProperty(year)) {
