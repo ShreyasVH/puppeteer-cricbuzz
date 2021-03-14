@@ -403,7 +403,6 @@ const isGameCompleted = (startTime, gameType) => {
 };
 
 const getDate = date => {
-    console.log(date);
     return new Date((new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()))).getTime() - (5 * 60 * 60 * 1000 + 30 * 60 * 1000));
 }
 
