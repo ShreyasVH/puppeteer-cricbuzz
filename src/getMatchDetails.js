@@ -594,7 +594,7 @@ const getMatchDetails = async (matchUrl) => {
         details = await page.evaluate(getMatchDetailsFromHTML, teamReplacements, getPlayerIdFromLink.toString(), getGameType.toString(), isGameCompleted.toString());
         await page.close();
 
-        if (Object.keys(details).length > 0) {
+        if (Object.keys(details).length > 0 && (details.resultText !== 'There is no scorecard available for this match.')) {
             let commentaryUrl = matchUrl.replace('live-cricket-scorecard', 'cricket-scores');
 
             const motmPage = await browser.newPage();
