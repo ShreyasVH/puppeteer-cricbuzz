@@ -61,7 +61,7 @@ const getMatchIdFromLink = require('./utils').getMatchIdFromLink;
                         const startTime = matchStartTimeMap[gameType][mId];
                         details.startTimeOriginal = details.startTime;
                         details.startTime = startTime;
-                        details.startTimeString = (new Date(startTime)).toLocaleDateString('en-GB');
+                        details.startTimeString = (new Date(startTime)).toLocaleDateString('en-GB', {timeZone: 'Asia/Kolkata'});
                         details.year = new Date(startTime).getFullYear();
 
                         fs.writeFile('data/matches/' + tourId + '/' + matchId + '.json', JSON.stringify(details, null, '  '), error => {

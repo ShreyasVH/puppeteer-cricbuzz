@@ -7,7 +7,7 @@ const getTourIdsForYear = require('./getTourIdsForYear').getTourIdsForYear;
 
 (async () => {
     const today = new Date();
-    const year = today.getFullYear();
+    const year = today.toLocaleString('en-GB', {timeZone: 'Asia/Kolkata', year: 'numeric'});
 
     const tourIds = getTourIdsForYear(year);
 
