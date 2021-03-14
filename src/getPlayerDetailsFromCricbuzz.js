@@ -3,13 +3,17 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
+const getDate = require('./utils').getDate;
+
 const path = require('path');
 const scriptName = path.basename(__filename);
 
 const fileNameParts = process.argv[1].split('\/');
 const fileName = fileNameParts[fileNameParts.length - 1];
 
-const getPlayerDetailsFromHTML = () => {
+const getPlayerDetailsFromHTML = (getDateDef) => {
+    const getDate = new Function(' return (' + getDateDef + ').apply(null, arguments)');
+
     let details = {};
     try {
         let nameElement = document.querySelector('h1');
@@ -31,7 +35,8 @@ const getPlayerDetailsFromHTML = () => {
                 matches = dobElement.innerText.match(/(.*)/);
             }
             if (matches) {
-                const dateOfBirth = new Date(matches[1]);
+                const dateOfBirth = getDate.call(null, new Date(matches[1]));
+
                 details.birthDate = dateOfBirth.getTime();
                 details.birthDateString = dateOfBirth.toLocaleDateString('en-GB');
             }
@@ -158,7 +163,7 @@ const getPlayerDetails = async (playerId) => {
         });
         page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-        details = await page.evaluate(getPlayerDetailsFromHTML);
+        details = await page.evaluate(getPlayerDetailsFromHTML, getDate.toString());
         await page.close();
 
         if (Object.keys(details).length > 0) {
