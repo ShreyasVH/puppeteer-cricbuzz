@@ -49,7 +49,19 @@ const getMatchesForTour = async (tourUrl) => {
                         const matchId = getMatchIdFromLink(match.link);
                         if (matchId) {
                             const matchFilePath = 'data/matches/' + tourId + '/' + matchId + '.json';
-                            if (!fs.existsSync(matchFilePath)) {
+                            let fetchMatchRequired = !fs.existsSync(matchFilePath);
+
+                            if (fs.existsSync(matchFilePath)) {
+                                try {
+                                    const details = JSON.parse(fs.readFileSync(matchFilePath));
+                                    fetchMatchRequired = ((details.resultText === 'There is no scorecard available for this match.') || (details.resultText === 'The scorecard will appear once the match starts.'));
+                                    console.log(details.resultText);
+                                } catch (e) {
+                                    fetchMatchRequired = true;
+                                }
+                            }
+
+                            if (fetchMatchRequired) {
                                 await getMatchDetails(match.link);
                             }
                         }
