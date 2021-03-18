@@ -113,7 +113,7 @@ const getPlayerDetailsFromHTML = (getDateDef) => {
         for (const matchStatsElement of matchStatElements) {
             const matchText = matchStatsElement.innerText;
             const matches = matchText.toLowerCase().match(/\((.*) matches/);
-            console.log(matches[1]);
+            matchesStats.push(parseInt(matches[1], 10));
             mIndex++;
         }
 
@@ -125,8 +125,12 @@ const getPlayerDetailsFromHTML = (getDateDef) => {
             if (gameType === 'Overall') {
                 continue;
             }
-            details.battingStats[gameType] = {};
-            details.bowlingStats[gameType] = {};
+            details.battingStats[gameType] = {
+                matches: matchesStats[index]
+            };
+            details.bowlingStats[gameType] = {
+                matches: matchesStats[index]
+            };
             for (const key of Object.keys(allowedKeys)) {
                 if (stats.hasOwnProperty(key)) {
                     const typeKey = allowedKeys[key].type;
