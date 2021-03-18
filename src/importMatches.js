@@ -241,12 +241,16 @@ const importTour = async (details, existingTours, yearTours, errors) => {
                 yearTours[year].push(result);
                 existingTours[key] = result.id;
             } else {
-                errors.push({
-                    payload,
-                    status: response.status,
-                    response: response.result,
-                    type: 'IMPORT_TOUR'
-                });
+                const result = response.result;
+                const errorCode = result.code;
+                if (errorCode !== 4004) {
+                    errors.push({
+                        payload,
+                        status: response.status,
+                        response: response.result,
+                        type: 'IMPORT_TOUR'
+                    });
+                }
             }
         }
     }
