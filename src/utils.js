@@ -278,13 +278,18 @@ const getGameType = (matchName, tourName) => {
 }
 
 const getBallsFromOversText = async (oversText, matchStartTime, stadiumUrl) => {
+    const ballsPerOver = await getBallsPerOver(matchStartTime, stadiumUrl);
+    return getBallsFromOversTextWithBallsPerOver(oversText, ballsPerOver);
+}
+
+const getBallsFromOversTextWithBallsPerOver = async (oversText, ballsPerOver) => {
     const overParts = oversText.split('.');
     let balls = 0;
     const overs = parseInt(overParts[0], 10);
     if (overParts.length === 2) {
         balls = parseInt(overParts[1],10);
     }
-    balls += (overs * await getBallsPerOver(matchStartTime, stadiumUrl));
+    balls += (overs * ballsPerOver);
     return balls;
 }
 
@@ -413,6 +418,7 @@ exports.getMatchIdFromLink = getMatchIdFromLink;
 exports.getTourIdFromLink = getTourIdFromLink;
 exports.getGameType = getGameType;
 exports.getBallsFromOversText = getBallsFromOversText;
+exports.getBallsFromOversTextWithBallsPerOver = getBallsFromOversTextWithBallsPerOver;
 exports.getBallsPerOver = getBallsPerOver;
 exports.correctTeam = correctTeam;
 exports.isGameCompleted = isGameCompleted;
