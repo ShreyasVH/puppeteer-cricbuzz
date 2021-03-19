@@ -11,10 +11,22 @@ const getPlayersForMatch = require('./getPlayersForMatch').getPlayersForMatch;
     let playerIds = [];
 
     const today = new Date();
-    let tourList = await getTourList(today.getFullYear());
+    const date = parseInt(today.toLocaleString('en-GB', {timeZone: 'Asia/Kolkata', day: 'numeric'}), 10);
+    const month = parseInt(today.toLocaleString('en-GB', {timeZone: 'Asia/Kolkata', month: 'numeric'}), 10);
+    const year = parseInt(today.toLocaleString('en-GB', {timeZone: 'Asia/Kolkata', year: 'numeric'}), 10);
+
+    let cutoffTime = 7 * 24 * 3600 * 1000;
+    if ((date >= 24) && (date <= 31)) {
+        if (month === 12) {
+            cutoffTime = 365 * 24 * 3600 * 1000;
+        }
+        cutoffTime = 30 * 24 * 3600 * 1000;
+    }
+
+    let tourList = await getTourList(year);
 
     if (today.getMonth() === 0) {
-        tourList = await tourList.concat(getTourList(today.getFullYear() - 1));
+        tourList = await tourList.concat(getTourList(year - 1));
     }
 
     for (const tour of tourList) {
@@ -44,7 +56,7 @@ const getPlayersForMatch = require('./getPlayersForMatch').getPlayersForMatch;
                     // console.log("\n\t\t\tProcessing match. " + match.name + " [" + matchIndex + "/" + matchList.length + "]\n");
 
                     const matchId = getMatchIdFromLink(match.link);
-                    if (match.startTime >= (today.getTime() - (30 * 24 * 3600 * 1000))) {
+                    if (match.startTime >= (today.getTime() - cutoffTime) && (match.startTime <= today.getTime())) {
                         playerIds = playerIds.concat(getPlayersForMatch(tourId, matchId));
                     }
 
