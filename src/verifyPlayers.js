@@ -308,6 +308,7 @@ const getCreatedPlayerDetails = async id => {
                     mismatchedPlayerStatsAssociates[playerId] = {
                         name: playerDetails.name,
                         createdPlayerId,
+                        howstatPlayerId,
                         country,
                         mismatchedStats
                     };
@@ -315,6 +316,7 @@ const getCreatedPlayerDetails = async id => {
                     mismatchedPlayerStats[playerId] = {
                         name: playerDetails.name,
                         createdPlayerId,
+                        howstatPlayerId,
                         country,
                         mismatchedStats
                     };
