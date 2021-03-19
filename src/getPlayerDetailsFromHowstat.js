@@ -4,12 +4,23 @@ const puppeteer = require('puppeteer');
 const getDate = require('./utils').getDate;
 const path = require('path');
 
-const getPlayerDetailsFromHTML = (getDateDef) => {
+const scriptName = path.basename(__filename);
+
+const fileNameParts = process.argv[1].split('\/');
+const fileName = fileNameParts[fileNameParts.length - 1];
+
+const getPlayerDetailsFromHTML = (url, gameType, getDateDef) => {
+    if (url !== window.location.href) {
+        console.log(url, window.location.href);
+        return {};
+    }
+
     const getDate = new Function(' return (' + getDateDef + ').apply(null, arguments)');
 
     const allowedKeys = {
         'Full Name': {},
         'Born': {},
+        'Matches': {},
         'Innings': {
             type: 'battingStats',
             formattedKey: 'innings'
@@ -18,6 +29,14 @@ const getPlayerDetailsFromHTML = (getDateDef) => {
             type: 'battingStats',
             formattedKey: 'runs'
         },
+        'Balls Faced': {
+            type: 'battingStats',
+            formattedKey: 'balls'
+        },
+        'Not Outs': {
+            type: 'battingStats',
+            formattedKey: 'notOuts'
+        },
         '4s': {
             type: 'battingStats',
             formattedKey: 'fours'
@@ -25,6 +44,10 @@ const getPlayerDetailsFromHTML = (getDateDef) => {
         '6s': {
             type: 'battingStats',
             formattedKey: 'sixes'
+        },
+        'Highest Score': {
+            type: 'battingStats',
+            formattedKey: 'highest'
         },
         'Runs Conceded': {
             type: 'bowlingStats',
@@ -51,45 +74,22 @@ const getPlayerDetailsFromHTML = (getDateDef) => {
 
         let stats = {};
 
-        const tables = document.querySelectorAll('table');
-        let gameTypes = [];
-        for (const table of tables) {
-            const classList = table.classList;
-
-            for (const className of classList) {
-                if ('BorderedBoxTest' === className) {
-                    gameTypes.push('TEST');
-                } else if ('BorderedBoxOverall' === className) {
-                    gameTypes.push('Overall');
-                } else if ('BorderedBoxODI' === className) {
-                    gameTypes.push('ODI');
-                } else if ('BorderedBoxT20' === className) {
-                    gameTypes.push('T20');
-                } else if ('BorderedBoxIPL' === className) {
-                    gameTypes.push('IPL');
-                }
-            }
-        }
-        // console.log(JSON.stringify(gameTypes, null, ' '));
-
-        const valueElements = document.querySelectorAll('td.FieldValue');
-        for (const valueElement of valueElements) {
-            const parent = valueElement.closest('tr');
-            const nameElement = parent.querySelector('td');
-            if (nameElement) {
+        const nameElementsForStats = document.querySelectorAll('span.FieldName');
+        for (const nameElement of nameElementsForStats) {
+            const parent = nameElement.closest('tr');
+            const valueElement = parent.querySelectorAll('td')[1];
+            if (valueElement) {
                 const key = nameElement.innerText.replace(':', '').trim();
                 const value = valueElement.innerText;
 
                 if (allowedKeys.hasOwnProperty(key)) {
                     // console.log(key, value);
-                    if (!stats.hasOwnProperty(key)) {
-                        stats[key] = [];
-                    }
-                    stats[key].push(value);
+                        stats[key] = value;
                 }
             }
         }
-        // console.log(JSON.stringify(stats['Highest Score'], null, ' '));
+
+        // console.log(JSON.stringify(stats, null, ' '));
 
         const nameElements = document.querySelectorAll('td.FieldName');
         for (const nameElement of nameElements) {
@@ -107,45 +107,32 @@ const getPlayerDetailsFromHTML = (getDateDef) => {
             }
         }
 
-        let matchesStats = [];
-        const matchStatElements = document.querySelectorAll('.TextBlack10');
-        let mIndex = 0;
-        for (const matchStatsElement of matchStatElements) {
-            const matchText = matchStatsElement.innerText;
-            const matches = matchText.toLowerCase().match(/\((.*) matches/);
-            matchesStats.push(parseInt(matches[1], 10));
-            mIndex++;
-        }
-
         details.battingStats = {};
         details.bowlingStats = {};
 
-        let index = 0;
-        for (const gameType of gameTypes) {
-            if (gameType === 'Overall') {
-                continue;
-            }
-            details.battingStats[gameType] = {
-                matches: matchesStats[index]
-            };
-            details.bowlingStats[gameType] = {
-                matches: matchesStats[index]
-            };
-            for (const key of Object.keys(allowedKeys)) {
-                if (stats.hasOwnProperty(key)) {
-                    const typeKey = allowedKeys[key].type;
-                    // console.log(typeKey);
-                    const formattedKey = allowedKeys[key].formattedKey;
-                    details[typeKey][gameType][formattedKey] = parseInt(stats[key][index], 10);
-                    // console.log(key, stats[key][index]);
-                }
-            }
+        const matches = parseInt(details.Matches, 10);
+        details.battingStats[gameType] = {
+            matches
+        };
+        details.bowlingStats[gameType] = {
+            matches
+        };
 
-            index++;
+        for (const key of Object.keys(allowedKeys)) {
+            if (stats.hasOwnProperty(key)) {
+                const typeKey = allowedKeys[key].type;
+                // console.log(typeKey);
+                const formattedKey = allowedKeys[key].formattedKey;
+                details[typeKey][gameType][formattedKey] = stats[key];
+                // console.log(key, stats[key][index]);
+            }
         }
 
         const countryText = document.querySelector('.TextGreenBold12').innerText;
-        details.country = countryText.match(/(.*)\((.*)\)/)[2];
+        const countryTextMatches = countryText.match(/(.*)\((.*)\)/);
+        if (countryTextMatches) {
+            details.country = countryTextMatches[2];
+        }
 
         details.name = details['Full Name'].trim();
         delete details['Full Name'];
@@ -176,30 +163,57 @@ const getPlayerDetailsFromHowstat = async (playerId) => {
             ]
         });
 
-        const playerUrl = 'http://www.howstat.com/cricket/Statistics/Players/PlayerOverviewSummary.asp?PlayerID=' + playerId;
+        const urls = [
+            {
+                url: 'http://www.howstat.com/cricket/Statistics/Players/PlayerOverview.asp?PlayerID=' + playerId,
+                gameType: 'TEST'
+            },
+            {
+                url: 'http://www.howstat.com/cricket/Statistics/Players/PlayerOverview_ODI.asp?PlayerID=' + playerId,
+                gameType: 'ODI'
+            },
+            {
+                url: 'http://www.howstat.com/cricket/Statistics/Players/PlayerOverview_T20.asp?PlayerID=' + playerId,
+                gameType: 'T20'
+            },
+            {
+                url: 'http://www.howstat.com/cricket/Statistics/IPL/PlayerOverview.asp?PlayerID=' + playerId,
+                gameType: 'IPL'
+            }
+        ];
+
         console.log('Fetching player details for : ' + playerId);
 
-        const page = await browser.newPage();
-        await page.goto(playerUrl, {
-            waitUntil: 'networkidle2',
-            timeout: 0
-        });
-        page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-
-        details = await page.evaluate(getPlayerDetailsFromHTML, getDate.toString());
-        await page.close();
-
-        if (Object.keys(details).length > 0) {
-            const playerCacheFilePath = path.resolve(__dirname, '../data/playerCacheHowstat.json');
-
-            let playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
-            details.updated = (new Date()).getTime();
-            playerCache[playerId] = details;
-
+        for (const urlObject of urls) {
             try {
-                fs.writeFileSync(playerCacheFilePath, JSON.stringify(playerCache, null, '  '));
-            } catch (error) {
-                console.log("\n\t\tError while writing player cache. Error: " + error + "\n");
+                const playerUrl = urlObject.url;
+                console.log(playerUrl);
+                const page = await browser.newPage();
+                await page.goto(playerUrl, {
+                    waitUntil: 'networkidle2',
+                    timeout: 0
+                });
+                page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+
+                const batchDetails = await page.evaluate(getPlayerDetailsFromHTML, playerUrl, urlObject.gameType, getDate.toString());
+                // console.log(JSON.stringify(batchDetails, null, ' '));
+
+
+                details.name = batchDetails.name;
+                if (batchDetails.hasOwnProperty('country')) {
+                    details.country = batchDetails.country;
+                }
+                details.birthDate = batchDetails.birthDate;
+                details.birthDateString = batchDetails.birthDateString;
+
+                let previousBattingStats = ((details.hasOwnProperty('battingStats')) ? details.battingStats : {});
+                let previousBowlingStats = ((details.hasOwnProperty('bowlingStats')) ? details.bowlingStats : {});
+                details.battingStats = Object.assign(previousBattingStats, batchDetails.battingStats);
+                details.bowlingStats = Object.assign(previousBowlingStats, batchDetails.bowlingStats);
+
+                await page.close();
+            } catch (e) {
+                console.log(e);
             }
         }
 
@@ -208,13 +222,30 @@ const getPlayerDetailsFromHowstat = async (playerId) => {
         console.log('Error while getting details for player. Error: ' + e);
     }
 
+    if (Object.keys(details).length > 0) {
+        const playerCacheFilePath = path.resolve(__dirname, '../data/playerCacheHowstat.json');
+
+        let playerCache = JSON.parse(fs.readFileSync(playerCacheFilePath));
+        details.updated = (new Date()).getTime();
+        playerCache[playerId] = details;
+
+        try {
+            fs.writeFileSync(playerCacheFilePath, JSON.stringify(playerCache, null, '  '));
+        } catch (error) {
+            console.log("\n\t\tError while writing player cache. Error: " + error + "\n");
+        }
+    }
 
     return details;
 }
 
-(async () => {
-    const playerId = process.argv[2];
-    // console.log(playerId);
-    const details = await getPlayerDetailsFromHowstat(playerId);
-    console.log(JSON.stringify(details, null, ' '));
-})();
+exports.getPlayerDetailsFromHowstat = getPlayerDetailsFromHowstat;
+
+if (fileName === scriptName) {
+    (async () => {
+        const playerId = process.argv[2];
+        // console.log(playerId);
+        const details = await getPlayerDetailsFromHowstat(playerId);
+        console.log(JSON.stringify(details, null, ' '));
+    })();
+}
