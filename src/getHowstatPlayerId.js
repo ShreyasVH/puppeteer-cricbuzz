@@ -19,7 +19,6 @@ const getHowstatPlayerId = async (dateOfBirth, country, name) => {
             const nameParts = name.split(' ');
             const firstName = nameParts[0];
             const lastName = nameParts[nameParts.length - 1];
-            console.log(firstName, lastName);
 
             if ((player.name.indexOf(firstName) !== -1) || (player.name.indexOf(lastName) !== -1)) {
                 options.push(player.id);
