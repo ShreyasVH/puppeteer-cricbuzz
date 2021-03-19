@@ -96,13 +96,18 @@ const getCreatedPlayerDetails = async id => {
             playerDetails = await getPlayerDetails(playerId);
         }
 
+        if ((null === playerDetails.birthDate) || (playerDetails.birthDate < (new Date('1881/01/01')).getTime())) {
+            index++;
+            continue;
+        }
+
         const howstatPlayerId = await getHowstatPlayerId(playerDetails.birthDate, playerDetails.country, playerDetails.name);
         // // console.log(howstatPlayerId);
         let playerDetailsHowstat = {
             battingStats: {},
             bowlingStats: {}
         };
-        if ('number' === typeof howstatPlayerId) {
+        if ('string' === typeof howstatPlayerId) {
             let playerCacheHowstat = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../data/playerCacheHowstat.json')));
             if (playerCacheHowstat.hasOwnProperty(howstatPlayerId) && playerCacheHowstat[howstatPlayerId].updated && (playerCacheHowstat[howstatPlayerId].updated >= (now - (3 * 24 * 3600 * 1000)))) {
                 playerDetailsHowstat = playerCacheHowstat[howstatPlayerId];
