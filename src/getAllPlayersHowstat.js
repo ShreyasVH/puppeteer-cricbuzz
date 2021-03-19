@@ -3,12 +3,9 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
-const getDate = require('./utils').getDate;
 
-const getAllPlayersFromHTML = (getDateDef) => {
+const getAllPlayersFromHTML = () => {
     let players = [];
-
-    const getDate = new Function(' return (' + getDateDef + ').apply(null, arguments)');
 
     const rows = document.querySelectorAll('table.tablelined tr');
     let index = 0;
@@ -23,7 +20,7 @@ const getAllPlayersFromHTML = (getDateDef) => {
                 const nameLink = nameElement.querySelector('a');
                 if (nameLink) {
                     const matches = nameLink.href.match(/(.*)?PlayerID=(.*)/);
-                    player.id = parseInt(matches[2], 10);
+                    player.id = matches[2];
                     player.name = nameLink.innerText;
                     // console.log("\t" + player.name);
                 }
@@ -31,7 +28,7 @@ const getAllPlayersFromHTML = (getDateDef) => {
                 const dobElement = cells[1];
                 const birthDateString = dobElement.innerText.split('/').reverse().join('/');
                 player.birthDateString = birthDateString;
-                player.birthDate = getDate.call(null, new Date(birthDateString)).getTime();
+                player.birthDate = (new Date(birthDateString)).getTime();
 
                 const countryElement = cells[2];
                 if (countryElement) {
@@ -76,7 +73,7 @@ const getAllPlayersFromHowstat = async () => {
             });
             page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-            const batchPlayers = await page.evaluate(getAllPlayersFromHTML, getDate.toString());
+            const batchPlayers = await page.evaluate(getAllPlayersFromHTML);
             // console.log(batchPlayers);
             players = players.concat(batchPlayers);
             // console.log(players);
