@@ -51,17 +51,22 @@ con.connect(function(err) {
         // while((index1 < howstatScores.length) || (index2 < cricbuzzScores.length)) {
         while((index1 < howstatScores.length)) {
             const hscore = howstatScores[index1];
-            const cscore = cricbuzzScores[index2];
-            const hscoreParts = hscore.split(", ");
-            const cscoreParts = cscore.split(", ");
-            // console.log(hscore);
-            // console.log(cscore);
+            if (index2 < (cricbuzzScores.length)) {
+                const cscore = cricbuzzScores[index2];
+                const hscoreParts = hscore.split(", ");
+                const cscoreParts = cscore.split(", ");
+                // console.log(hscore);
+                // console.log(cscore);
 
-            if (hscoreParts[0] === cscoreParts[0]) {
-                index2++;
+                if (hscoreParts[0] === cscoreParts[0]) {
+                    index2++;
+                } else {
+                    console.log(hscore);
+                }
             } else {
                 console.log(hscore);
             }
+
             index1++;
             // console.log(index1);
             // console.log(index2);
