@@ -477,46 +477,50 @@ const getMatchDetailsFromHTML = (teamReplacements, getPlayerIdFromLinkDef, getGa
         }
 
         const resultElement = document.querySelector('.cb-scrcrd-status');
-        let resultText = resultElement.innerText;
-        const resultTextParts = resultText.split(' - ');
-        resultText = resultTextParts[resultTextParts.length - 1];
-        details.resultText = resultText;
-        if (resultText.indexOf(' won ') !== -1) {
-            if (resultText.match(/super over|Super Over|eliminator/)) {
-                let matches = resultText.match(/\((.*) won (.*)/);
-                let winner = correctTeam(matches[1]);
-                details.winner = winner;
-                details.result = 'SUPER_OVER';
-            } else if (resultText.match(/bowl|Bowl/)) {
-                let matches = resultText.match(/\((.*) won (.*)/);
-                let winner = correctTeam(matches[1]);
-                details.winner = winner;
-                details.result = 'BOWL_OUT';
-            } else {
-                let matches = resultText.match(/(.*) won by([a-zA-Z ]*)([0-9]+) ([a-zA-Z]+)/);
-                if (matches) {
-                    const winner = correctTeam(matches[1]);
-                    const winMargin = matches[3];
-                    const winMarginTypeText = matches[4];
-
+        if (resultElement) {
+            let resultText = resultElement.innerText;
+            const resultTextParts = resultText.split(' - ');
+            resultText = resultTextParts[resultTextParts.length - 1];
+            details.resultText = resultText;
+            if (resultText.indexOf(' won ') !== -1) {
+                if (resultText.match(/super over|Super Over|eliminator/)) {
+                    let matches = resultText.match(/\((.*) won (.*)/);
+                    let winner = correctTeam(matches[1]);
                     details.winner = winner;
-                    details.result = 'NORMAL';
-                    details.winMargin = winMargin;
+                    details.result = 'SUPER_OVER';
+                } else if (resultText.match(/bowl|Bowl/)) {
+                    let matches = resultText.match(/\((.*) won (.*)/);
+                    let winner = correctTeam(matches[1]);
+                    details.winner = winner;
+                    details.result = 'BOWL_OUT';
+                } else {
+                    let matches = resultText.match(/(.*) won by([a-zA-Z ]*)([0-9]+) ([a-zA-Z]+)/);
+                    if (matches) {
+                        const winner = correctTeam(matches[1]);
+                        const winMargin = matches[3];
+                        const winMarginTypeText = matches[4];
+
+                        details.winner = winner;
+                        details.result = 'NORMAL';
+                        details.winMargin = winMargin;
 
 
-                    let winMarginType;
-                    if (winMarginTypeText.match(/wkt|wicket/)) {
-                        winMarginType = 'WICKET';
-                    } else if (winMarginTypeText.match(/run/)) {
-                        winMarginType = 'RUN';
+                        let winMarginType;
+                        if (winMarginTypeText.match(/wkt|wicket/)) {
+                            winMarginType = 'WICKET';
+                        } else if (winMarginTypeText.match(/run/)) {
+                            winMarginType = 'RUN';
+                        }
+                        details.winMarginType = winMarginType;
                     }
-                    details.winMarginType = winMarginType;
                 }
+            } else if (resultText.match('tie')) {
+                details.result = 'TIE';
+            } else if (resultText.indexOf(' drawn') !== -1) {
+                details.result = 'DRAW';
+            } else {
+                details.result = 'WASHED_OUT';
             }
-        } else if (resultText.match('tie')) {
-            details.result = 'TIE';
-        } else if (resultText.indexOf(' drawn') !== -1) {
-            details.result = 'DRAW';
         } else {
             details.result = 'WASHED_OUT';
         }
