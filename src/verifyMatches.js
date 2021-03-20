@@ -56,31 +56,44 @@ let errorData = [];
                             if (fs.existsSync(tourFolder) && fs.existsSync(matchFile)) {
                                 try {
                                     const details = JSON.parse(fs.readFileSync(matchFile));
-                                    console.log('\t\t\t\tVerifying match details');
-                                    let errors = await verifyMatchDetails(details);
-                                    // console.log(JSON.stringify(errors));
-                                    const errorDataFile = 'data/matchErrors.json';
 
-                                    if(errors.length > 0) {
-                                        errorData.push({
+                                    if (details.resultText === 'There is no scorecard available for this match.') {
+                                        missingMatches.push({
                                             tourId,
                                             tourName: tourDetails.name,
                                             tourLink: tourDetails.tourLink,
                                             gameType,
                                             matchId,
                                             matchName: match.name,
-                                            matchLink: match.link,
-                                            errors
+                                            matchLink: match.link
                                         });
-                                    }
+                                    } else {
+                                        console.log('\t\t\t\tVerifying match details');
+                                        let errors = await verifyMatchDetails(details);
+                                        // console.log(JSON.stringify(errors));
+                                        const errorDataFile = 'data/matchErrors.json';
 
-                                    fs.writeFileSync(errorDataFile, JSON.stringify(errorData, null, '  '), error => {
-                                        if (error) {
-                                            console.log("\t\tError while writing match errors. Error: " + error);
+                                        if(errors.length > 0) {
+                                            errorData.push({
+                                                tourId,
+                                                tourName: tourDetails.name,
+                                                tourLink: tourDetails.tourLink,
+                                                gameType,
+                                                matchId,
+                                                matchName: match.name,
+                                                matchLink: match.link,
+                                                errors
+                                            });
                                         }
-                                    });
 
-                                    console.log('\t\t\t\tVerified match details');
+                                        fs.writeFileSync(errorDataFile, JSON.stringify(errorData, null, '  '), error => {
+                                            if (error) {
+                                                console.log("\t\tError while writing match errors. Error: " + error);
+                                            }
+                                        });
+
+                                        console.log('\t\t\t\tVerified match details');
+                                    }
                                 } catch (e) {
                                     console.log("Tour: " + tourId);
                                     console.log("Match: " + matchId);
