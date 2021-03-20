@@ -164,7 +164,8 @@ for (const tour of tours) {
                         tourName: details.tourName,
                         gameType: details.gameType,
                         match,
-                        matchName: details.name
+                        matchName: details.name,
+                        matchLink: details.matchLink
                     });
                 }
             }
