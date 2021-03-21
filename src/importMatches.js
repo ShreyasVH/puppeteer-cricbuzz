@@ -543,6 +543,12 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
 
                 payload.manOfTheMatchList = manOfTheMatchList;
 
+                let isOfficial = true;
+                if (details.hasOwnProperty('isOfficial')) {
+                    isOfficial = JSON.parse(details.isOfficial);
+                }
+                payload.official = isOfficial;
+
                 // console.log(JSON.stringify(payload, null, ' '));
 
                 const url = endpoint + '/cricbuzz/matches';
