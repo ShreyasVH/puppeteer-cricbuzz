@@ -6,6 +6,7 @@
     "googleapis": "^39.2.0",
     "minimist": ">=0.2.1",
     "mysql": "^2.18.1",
+    "node-forge": "^0.10.0",
     "puppeteer": "^2.1.1"
   }
 }
