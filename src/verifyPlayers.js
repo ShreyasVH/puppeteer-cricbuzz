@@ -150,7 +150,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedRuns = parseInt(stats.runs, 10);
                         const expectedRunsHowstat = ((expectedBattingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBattingStatsHowstat[gameType].runs, 10) : 0);
                         const actualRuns = actualStats.runs;
-                        if ((expectedRuns > actualRuns) && (expectedRunsHowstat > actualRuns)) {
+                        if ((expectedRuns !== actualRuns) && (expectedRunsHowstat !== actualRuns)) {
                             gameTypeStats.runs = {
                                 expectedRuns,
                                 actualRuns,
@@ -161,7 +161,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedInnings = parseInt(stats.innings, 10);
                         const expectedInningsHowstat = ((expectedBattingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBattingStatsHowstat[gameType].innings, 10) : 0);
                         const actualInnings = actualStats.innings;
-                        if ((expectedInnings > actualInnings) && (expectedInningsHowstat > actualInnings)) {
+                        if ((expectedInnings !== actualInnings) && (expectedInningsHowstat !== actualInnings)) {
                             gameTypeStats.innings = {
                                 expectedInnings,
                                 actualInnings,
@@ -182,7 +182,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedBalls = parseInt(stats.balls, 10);
                         const expectedBallsHowstat = ((expectedBattingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBattingStatsHowstat[gameType].balls, 10) : 0);
                         const actualBalls = actualStats.balls;
-                        if ((expectedBalls > actualBalls) && (expectedBallsHowstat > actualBalls)) {
+                        if ((expectedBalls !== actualBalls) && (expectedBallsHowstat !== actualBalls)) {
                             gameTypeStats.balls = {
                                 expectedBalls,
                                 actualBalls,
@@ -193,7 +193,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedFours = parseInt(stats.fours, 10);
                         const expectedFoursHowstat = ((expectedBattingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBattingStatsHowstat[gameType].fours, 10) : 0);
                         const actualFours = actualStats.fours;
-                        if ((expectedFours > actualFours) && (expectedFoursHowstat > actualFours)) {
+                        if ((expectedFours !== actualFours) && (expectedFoursHowstat !== actualFours)) {
                             gameTypeStats.fours = {
                                 expectedFours,
                                 actualFours,
@@ -204,7 +204,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedSixes = parseInt(stats.sixes, 10);
                         const expectedSixesHowstat = ((expectedBattingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBattingStatsHowstat[gameType].sixes, 10) : 0);
                         const actualSixes = actualStats.sixes;
-                        if ((expectedSixes > actualSixes) && (expectedSixesHowstat > actualSixes)) {
+                        if ((expectedSixes !== actualSixes) && (expectedSixesHowstat !== actualSixes)) {
                             gameTypeStats.sixes = {
                                 expectedSixes,
                                 actualSixes,
@@ -215,7 +215,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedHighest = parseInt(stats.highest, 10);
                         const expectedHighestHowstat = ((expectedBattingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBattingStatsHowstat[gameType].highest, 10) : 0);
                         const actualHighest = actualStats.highest;
-                        if ((expectedHighest > actualHighest) && (expectedHighestHowstat > actualHighest)) {
+                        if ((expectedHighest !== actualHighest) && (expectedHighestHowstat !== actualHighest)) {
                             gameTypeStats.highest = {
                                 expectedHighest,
                                 actualHighest,
@@ -258,7 +258,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedRuns = parseInt(stats.runs, 10);
                         const expectedRunsHowstat = ((expectedBowlingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBowlingStatsHowstat[gameType].runs, 10) : 0);
                         const actualRuns = actualStats.runs;
-                        if ((expectedRuns > actualRuns) && (expectedRunsHowstat > actualRuns)) {
+                        if ((expectedRuns !== actualRuns) && (expectedRunsHowstat !== actualRuns)) {
                             gameTypeStats.runsBowl = {
                                 expectedRuns,
                                 actualRuns,
@@ -279,7 +279,7 @@ const getCreatedPlayerDetails = async id => {
                         const expectedWickets = parseInt(stats.wickets, 10);
                         const expectedWicketsHowstat = ((expectedBowlingStatsHowstat.hasOwnProperty(gameType)) ? parseInt(expectedBowlingStatsHowstat[gameType].wickets, 10) : 0);
                         const actualWickets = actualStats.wickets;
-                        if ((expectedWickets > actualWickets) && (expectedWicketsHowstat > actualWickets)) {
+                        if ((expectedWickets !== actualWickets) && (expectedWicketsHowstat !== actualWickets)) {
                             gameTypeStats.wickets = {
                                 expectedWickets,
                                 actualWickets,
