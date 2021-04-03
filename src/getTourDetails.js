@@ -96,7 +96,7 @@ const getTourDetails = async (tourUrl) => {
     let details = {};
 
     const browser  = await puppeteer.launch({
-        headless: false,
+        headless: true,
         devtools: true,
         args: [
             '--no-sandbox',
