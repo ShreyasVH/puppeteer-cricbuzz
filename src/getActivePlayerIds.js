@@ -69,5 +69,9 @@ const getPlayersForMatch = require('./getPlayersForMatch').getPlayersForMatch;
         }
     }
 
+    playerIds = playerIds.filter(function(item, pos) {
+        return (playerIds.indexOf(item) === pos);
+    })
+
     fs.writeFileSync(path.resolve(__dirname, '../data/activePlayerIds.csv'), playerIds.join("\n"));
 })();
