@@ -428,10 +428,6 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                     playerList = playerList.concat(details.players);
                 }
 
-                if (details.hasOwnProperty('bench')) {
-                    playerList = playerList.concat(details.bench);
-                }
-
                 for (const player of playerList) {
                     const playerDetails = await getPlayerDetailsFromURL(player.link);
                     players.push({
@@ -442,6 +438,21 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
 
                 }
                 payload.players = players;
+
+                let bench = [];
+                if (details.hasOwnProperty('bench')) {
+                    for (const player of details.bench) {
+                        const playerDetails = await getPlayerDetailsFromURL(player.link);
+                        bench.push(
+                            {
+                                playerId: existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate],
+                                teamId: existingTeams[correctTeam(player.team, teamReplacements) + '_1_INTERNATIONAL'],
+                                name: playerDetails.name
+                            }
+                        );
+                    }
+                }
+                payload.bench = bench;
 
                 let battingScores = [];
                 if (details.hasOwnProperty('battingScores')) {
