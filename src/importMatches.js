@@ -554,6 +554,15 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
 
                 payload.manOfTheMatchList = manOfTheMatchList;
 
+                let captains = [];
+                if (details.hasOwnProperty('captains')) {
+                    for (const player of details.captains) {
+                        const playerDetails = await getPlayerDetailsFromURL(player.link);
+                        captains.push(existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate]);
+                    }
+                }
+                payload.captains = captains;
+
                 let isOfficial = true;
                 if (details.hasOwnProperty('isOfficial')) {
                     isOfficial = JSON.parse(details.isOfficial);
