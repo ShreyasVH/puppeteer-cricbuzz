@@ -563,6 +563,15 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                 }
                 payload.captains = captains;
 
+                let wicketKeepers = [];
+                if (details.hasOwnProperty('wicketKeepers')) {
+                    for (const player of details.wicketKeepers) {
+                        const playerDetails = await getPlayerDetailsFromURL(player.link);
+                        wicketKeepers.push(existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate]);
+                    }
+                }
+                payload.wicketKeepers = wicketKeepers;
+
                 let isOfficial = true;
                 if (details.hasOwnProperty('isOfficial')) {
                     isOfficial = JSON.parse(details.isOfficial);
