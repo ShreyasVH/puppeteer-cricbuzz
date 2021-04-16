@@ -13,6 +13,7 @@ const getPlayer = require('./utils').getPlayer;
 const getPlayerDetails = require('./getPlayerDetailsFromCricbuzz').getPlayerDetails;
 const post = require('./api').post;
 const get = require('./api').get;
+const put = require('./api').put;
 
 const endpoint = process.env.CRICBUZZ_ENDPOINT;
 
@@ -558,7 +559,6 @@ const importMatch = async (details, existingSeries, teamReplacements, teamTypes,
                         manOfTheMatchList.push(existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate]);
                     }
                 }
-
                 payload.manOfTheMatchList = manOfTheMatchList;
 
                 let captains = [];
@@ -616,7 +616,29 @@ const importMatch = async (details, existingSeries, teamReplacements, teamTypes,
                     }
                 }
 
-                
+                let manOfTheSeriesList = [];
+                if (details.hasOwnProperty('manOfTheSeriesList')) {
+                    for (const player of details.manOfTheSeriesList) {
+                        const playerDetails = await getPlayerDetailsFromURL(player.link);
+                        manOfTheSeriesList.push(existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate]);
+                    }
+
+                    const payloadForSeries = {
+                        manOfTheSeriesList
+                    };
+
+                    const url = endpoint + '/cricbuzz/series/' + seriesId;
+                    const response = await put(url, payloadForSeries);
+                    if (response.status !== 200) {
+                        errors.push({
+                            payloadForSeries,
+                            status: response.status,
+                            response: response.result,
+                            type: 'UPDATE_SERIES'
+                        });
+                    }
+                }
+
             }
         }
     }
