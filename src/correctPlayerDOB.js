@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const getDate = require('./utils').getDate;
 
 (async () => {
     const cachePath = path.resolve(__dirname, '../data/playerCache.json');
@@ -25,7 +24,7 @@ const getDate = require('./utils').getDate;
             console.log(dob.getHours(), dob.getMinutes(), dob.getSeconds());
             console.log(details.name);
 
-            // let newDOB = getDate(dob);
+            // let newDOB = dob;
 
             count++;
             console.log('----------------');
