@@ -407,10 +407,6 @@ const isGameCompleted = (startTime, gameType) => {
     return isCompleted;
 };
 
-const getDate = date => {
-    return new Date((new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()))).getTime() - (5 * 60 * 60 * 1000 + 30 * 60 * 1000));
-}
-
 exports.getPlayerIdFromLink = getPlayerIdFromLink;
 exports.getStadiumIdFromLink = getStadiumIdFromLink;
 exports.getPlayer = getPlayer;
@@ -422,4 +418,3 @@ exports.getBallsFromOversTextWithBallsPerOver = getBallsFromOversTextWithBallsPe
 exports.getBallsPerOver = getBallsPerOver;
 exports.correctTeam = correctTeam;
 exports.isGameCompleted = isGameCompleted;
-exports.getDate = getDate;

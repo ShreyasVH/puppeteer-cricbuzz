@@ -1,7 +1,6 @@
 'use strict';
 const fs = require('fs');
 const puppeteer = require('puppeteer');
-const getDate = require('./utils').getDate;
 const path = require('path');
 
 const scriptName = path.basename(__filename);
@@ -9,13 +8,11 @@ const scriptName = path.basename(__filename);
 const fileNameParts = process.argv[1].split('\/');
 const fileName = fileNameParts[fileNameParts.length - 1];
 
-const getPlayerDetailsFromHTML = (url, gameType, getDateDef) => {
+const getPlayerDetailsFromHTML = (url, gameType) => {
     if (url !== window.location.href) {
         console.log(url, window.location.href);
         return {};
     }
-
-    const getDate = new Function(' return (' + getDateDef + ').apply(null, arguments)');
 
     const allowedKeys = {
         'Full Name': {},
@@ -139,7 +136,7 @@ const getPlayerDetailsFromHTML = (url, gameType, getDateDef) => {
 
         const dateOfBirthString = details['Born'].split('/').reverse().join('/');
         details.birthDateString = dateOfBirthString;
-        details.birthDate = getDate.call(null, new Date(dateOfBirthString)).getTime();
+        details.birthDate = (new Date(dateOfBirthString)).getTime();
         delete details['Born'];
 
     } catch (e) {
@@ -195,7 +192,7 @@ const getPlayerDetailsFromHowstat = async (playerId) => {
                 });
                 page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-                const batchDetails = await page.evaluate(getPlayerDetailsFromHTML, playerUrl, urlObject.gameType, getDate.toString());
+                const batchDetails = await page.evaluate(getPlayerDetailsFromHTML, playerUrl, urlObject.gameType);
                 // console.log(JSON.stringify(batchDetails, null, ' '));
 
 
