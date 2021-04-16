@@ -13,7 +13,6 @@ const getPlayer = require('./utils').getPlayer;
 const getPlayerDetails = require('./getPlayerDetailsFromCricbuzz').getPlayerDetails;
 const post = require('./api').post;
 const get = require('./api').get;
-const getDate = require('./utils').getDate;
 
 const endpoint = process.env.CRICBUZZ_ENDPOINT;
 
@@ -102,19 +101,21 @@ const importStadium = async (stadiumURL, existingCountries, existingStadiums, er
     }
 }
 
-const importTeam = async (team, existingTeams, teamReplacements, errors) => {
+const importTeam = async (team, existingTeams, teamReplacements, teamTypes, errors) => {
     let teamResponse = {};
     const countryId = 1;
 
     team = teamReplacements[team];
 
-    const key = team + '_' + countryId + '_INTERNATIONAL';
+    const teamType = getTeamType(team, teamTypes);
+
+    const key = team + '_' + countryId + '_' + teamType;
 
     if (!existingTeams.hasOwnProperty(key)) {
         const payload = {
             name: team,
             countryId: 1,
-            teamType: "INTERNATIONAL"
+            teamType
         };
 
         const url = endpoint + '/cricbuzz/teams';
@@ -142,13 +143,13 @@ const importTeam = async (team, existingTeams, teamReplacements, errors) => {
     return teamResponse;
 }
 
-const importTeams = async (details, existingTeams, teamReplacements, errors) => {
+const importTeams = async (details, existingTeams, teamReplacements, teamTypes, errors) => {
     const team1 = details.team1;
     const team2 = details.team2;
     const teamForSub = 'India';
 
     for (const team of [team1, team2, teamForSub]) {
-        await importTeam(team.toLowerCase(), existingTeams, teamReplacements, errors);
+        await importTeam(team.toLowerCase(), existingTeams, teamReplacements, teamTypes, errors);
     }
 }
 
@@ -162,7 +163,7 @@ const importPlayers = async (details, existingCountries, existingPlayers, errors
                 const countryId = existingCountries[playerDetails.country];
                 let dateOfBirth = playerDetails.birthDate;
                 if (dateOfBirth === null) {
-                    dateOfBirth = (getDate(new Date('1970-01-01'))).getTime();
+                    dateOfBirth = (new Date('1970-01-01')).getTime();
                 }
                 const key = playerDetails.name + '_' + countryId + '_' + dateOfBirth;
                 if (!existingPlayers.hasOwnProperty(key)) {
@@ -172,8 +173,6 @@ const importPlayers = async (details, existingCountries, existingPlayers, errors
                         dateOfBirth: dateOfBirth,
                         image: 'https://res.cloudinary.com/dyoxubvbg/image/upload/v1577106216/artists/default_m.jpg'
                     };
-
-                    console.log(payload);
 
                     const url = endpoint + '/cricbuzz/players';
                     const response = await post(url, payload);
@@ -208,6 +207,14 @@ const getToursForYear = async year => {
     return tours;
 };
 
+const getTeamType = (team, teamTypes) => {
+    let teamType = 'INTERNATIONAL';
+    if (teamTypes.hasOwnProperty(team)) {
+        teamType = teamTypes[team];
+    }
+    return teamType;
+};
+
 const importTour = async (details, existingTours, yearTours, errors) => {
     const tourId = getTourIdFromLink(details.tourLink);
     const tourDetailsFilePath = path.resolve(__dirname, '../data/tourDetails/' + tourId + '.json');
@@ -215,7 +222,7 @@ const importTour = async (details, existingTours, yearTours, errors) => {
         const tourDetails = JSON.parse(fs.readFileSync(tourDetailsFilePath));
         const startTime = tourDetails.startTime;
 
-        const year = getDate(new Date()).toLocaleString('en-GB', {timeZone: 'Asia/Kolkata', year: 'numeric'});
+        const year = ((new Date(startTime)).getFullYear());
         const tourName= details.tourName;
 
         if (!yearTours.hasOwnProperty(year)) {
@@ -311,7 +318,7 @@ const getSeriesStartTime = (tourDetails, gameType) => {
     return startTime;
 }
 
-const importSeries = async (details, existingTours, existingSeries, existingTeams, teamReplacements, errors) => {
+const importSeries = async (details, existingTours, existingSeries, existingTeams, teamReplacements, teamTypes, errors) => {
     const tourName = details.tourName;
     const tourId = getTourIdFromLink(details.tourLink);
     const tourDetailsFilePath = path.resolve(__dirname, '../data/tourDetails/' + tourId + '.json');
@@ -335,7 +342,7 @@ const importSeries = async (details, existingTours, existingSeries, existingTeam
                 const teams = getTeamsForSeries(tourDetails, details.gameType);
                 let teamIds = [];
                 for (const team of teams) {
-                    const teamResponse = await importTeam(team.toLowerCase(), existingTeams, teamReplacements, errors);
+                    const teamResponse = await importTeam(team.toLowerCase(), existingTeams, teamReplacements, teamTypes, errors);
                     teamIds.push(teamResponse.id);
                 }
                 payload.teams = teamIds;
@@ -362,7 +369,7 @@ const importSeries = async (details, existingTours, existingSeries, existingTeam
     }
 }
 
-const importMatch = async (details, existingSeries, teamReplacements, playerReplacements, dismissalModes, existingTeams, existingStadiums, existingCountries, existingPlayers, errors, referenceTourId, referenceMatchId) => {
+const importMatch = async (details, existingSeries, teamReplacements, teamTypes, playerReplacements, dismissalModes, existingTeams, existingStadiums, existingCountries, existingPlayers, errors, referenceTourId, referenceMatchId) => {
     const tourId = getTourIdFromLink(details.tourLink);
     const tourDetailsFilePath = path.resolve(__dirname, '../data/tourDetails/' + tourId + '.json');
     if (fs.existsSync(tourDetailsFilePath)) {
@@ -380,23 +387,23 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
 
                 let payload = {
                     seriesId,
-                    team1: existingTeams[correctTeam(details.team1, teamReplacements) + '_1_INTERNATIONAL'],
-                    team2: existingTeams[correctTeam(details.team2, teamReplacements) + '_1_INTERNATIONAL'],
+                    team1: existingTeams[correctTeam(details.team1, teamReplacements) + '_1_' + getTeamType(correctTeam(details.team1, teamReplacements), teamTypes)],
+                    team2: existingTeams[correctTeam(details.team2, teamReplacements) + '_1_' + getTeamType(correctTeam(details.team2, teamReplacements), teamTypes)],
                     result: details.result,
                     stadium: existingStadiums[stadiumDetails.name + '_' + existingCountries[stadiumDetails.country]],
                     startTime: details.startTime
                 };
 
                 if (details.hasOwnProperty('tossWinner')) {
-                    payload.tossWinner = existingTeams[correctTeam(details.tossWinner, teamReplacements) + '_1_INTERNATIONAL'];
+                    payload.tossWinner = existingTeams[correctTeam(details.tossWinner, teamReplacements) + '_1_' + getTeamType(correctTeam(details.tossWinner, teamReplacements), teamTypes)];
                 }
 
                 if (details.hasOwnProperty('batFirst')) {
-                    payload.batFirst = existingTeams[correctTeam(details.batFirst, teamReplacements) + '_1_INTERNATIONAL'];
+                    payload.batFirst = existingTeams[correctTeam(details.batFirst, teamReplacements) + '_1_' + getTeamType(correctTeam(details.batFirst, teamReplacements), teamTypes)];
                 }
 
                 if (details.hasOwnProperty('winner')) {
-                    payload.winner = existingTeams[correctTeam(details.winner, teamReplacements) + '_1_INTERNATIONAL'];
+                    payload.winner = existingTeams[correctTeam(details.winner, teamReplacements) + '_1_' + getTeamType(correctTeam(details.winner, teamReplacements), teamTypes)];
                 }
 
                 if (details.hasOwnProperty('winMargin')) {
@@ -413,8 +420,8 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                         extras.push({
                             runs: extrasObject.runs,
                             type: extrasObject.type,
-                            battingTeam: existingTeams[correctTeam(extrasObject.battingTeam, teamReplacements) + '_1_INTERNATIONAL'],
-                            bowlingTeam: existingTeams[correctTeam(extrasObject.bowlingTeam, teamReplacements) + '_1_INTERNATIONAL'],
+                            battingTeam: existingTeams[correctTeam(extrasObject.battingTeam, teamReplacements) + '_1_' + getTeamType(correctTeam(extrasObject.battingTeam, teamReplacements), teamTypes)],
+                            bowlingTeam: existingTeams[correctTeam(extrasObject.bowlingTeam, teamReplacements) + '_1_' + getTeamType(correctTeam(extrasObject.bowlingTeam, teamReplacements), teamTypes)],
                             innings: extrasObject.innings,
                             teamInnings: extrasObject.teamInnings
                         });
@@ -432,7 +439,7 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                     const playerDetails = await getPlayerDetailsFromURL(player.link);
                     players.push({
                         playerId: existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate],
-                        teamId: existingTeams[correctTeam(player.team, teamReplacements) + '_1_INTERNATIONAL'],
+                        teamId: existingTeams[correctTeam(player.team, teamReplacements) + '_1_' + getTeamType(correctTeam(player.team, teamReplacements), teamTypes)],
                         name: playerDetails.name
                     });
 
@@ -446,7 +453,7 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                         bench.push(
                             {
                                 playerId: existingPlayers[playerDetails.name + '_' + existingCountries[playerDetails.country] + '_' + playerDetails.birthDate],
-                                teamId: existingTeams[correctTeam(player.team, teamReplacements) + '_1_INTERNATIONAL'],
+                                teamId: existingTeams[correctTeam(player.team, teamReplacements) + '_1_' + getTeamType(correctTeam(player.team, teamReplacements), teamTypes)],
                                 name: playerDetails.name
                             }
                         );
@@ -608,6 +615,8 @@ const importMatch = async (details, existingSeries, teamReplacements, playerRepl
                         console.error("Error while removing matchfile: " + err)
                     }
                 }
+
+                
             }
         }
     }
@@ -679,7 +688,7 @@ const getPlayerDetailsFromURL = async playerLink => {
         playerDetails = await getPlayerDetails(playerId);
     }
     if (null === playerDetails.birthDate) {
-        playerDetails.birthDate = (getDate(new Date('1970-01-01'))).getTime();
+        playerDetails.birthDate = (new Date('1970-01-01')).getTime();
     }
     return playerDetails;
 };
@@ -720,6 +729,7 @@ const importCountriesFromPlayers = async (players, existingCountries, errors) =>
     const errors = [];
 
     const teamReplacements = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../data/teamReplacements.json')));
+    const teamTypes = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../data/teamTypes.json')));
     const playerReplacements = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../data/playerReplacements.json')));
     const dismissalModes = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../data/dismissalModes.json')));
 
@@ -794,7 +804,7 @@ const importCountriesFromPlayers = async (players, existingCountries, errors) =>
                 await importStadium(details.stadiumURL, existingCountries, existingStadiums, errors);
                 // console.log(existingStadiums);
 
-                await importTeams(details, existingTeams, teamReplacements, errors);
+                await importTeams(details, existingTeams, teamReplacements, teamTypes, errors);
                 // console.log(existingTeams);
 
                 await importPlayers(details, existingCountries, existingPlayers, errors);
@@ -803,9 +813,9 @@ const importCountriesFromPlayers = async (players, existingCountries, errors) =>
                 await importTour(details, existingTours, yearTours, errors);
                 // console.log(existingTours);
 
-                await importSeries(details, existingTours, existingSeries, existingTeams, teamReplacements, errors);
+                await importSeries(details, existingTours, existingSeries, existingTeams, teamReplacements, teamTypes, errors);
 
-                await importMatch(details, existingSeries, teamReplacements, playerReplacements, dismissalModes, existingTeams, existingStadiums, existingCountries, existingPlayers, errors, tourId, matchId);
+                await importMatch(details, existingSeries, teamReplacements, teamTypes, playerReplacements, dismissalModes, existingTeams, existingStadiums, existingCountries, existingPlayers, errors, tourId, matchId);
 
                 fs.writeFile(errorFilePath, JSON.stringify(errors, null, '  '), error => {
                     if (error) {
