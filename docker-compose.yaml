@@ -6,6 +6,7 @@ services:
       - ./:/app
       - /app/node_modules
       - ../puppeteer-howstat:/puppeteer-howstat
+      - ../puppeteer-cric-data:/app/data
     container_name: puppeteer-cricbuzz
     env_file:
       - .env.local
